@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "201108191364",
+    "project_id": "devcommunity-chat",
+    "storage_bucket": "devcommunity-chat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:201108191364:android:7eda51a7888ada16b72ad1",
+        "android_client_info": {
+          "package_name": "com.devcommunity.devcommunitychat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDufe_iRWksDA7Sahzipij838hbFvIzViw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
