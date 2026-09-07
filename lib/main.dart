@@ -1,6 +1,8 @@
-import "package:flutter/material.dart";
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'core/router/app_router.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -22,21 +24,10 @@ class DevCommunityChatApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
       title: 'DevCommunity Chat',
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text('DevCommunity Chat'),
-              SizedBox(height: 20),
-              Text('Firebase connect 🚀'),
-            ],
-          ),
-        ),
-      ),
+      debugShowCheckedModeBanner: false,
+      routerConfig: AppRouter.routerBase,
     );
   }
 }
