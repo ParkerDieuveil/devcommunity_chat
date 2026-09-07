@@ -57,7 +57,7 @@ class MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isMine
                     ? theme.colorScheme.primaryContainer
-                    : theme.colorScheme.surfaceVariant,
+                    : theme.colorScheme.surfaceContainerHighest, // Remplace surfaceVariant
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -111,9 +111,9 @@ class MessageBubble extends StatelessWidget {
                             fontSize: 11,
                             color: isMine
                                 ? theme.colorScheme.onPrimaryContainer
-                                    .withOpacity(0.6)
+                                    .withValues(alpha: 0.6) // Remplace withOpacity
                                 : theme.colorScheme.onSurfaceVariant
-                                    .withOpacity(0.6),
+                                    .withValues(alpha: 0.6), // Remplace withOpacity
                           ),
                         ),
                         if (isMine) ...[
