@@ -2,6 +2,7 @@ import 'package:devcommunitychat/features/auth/presentation/pages/login_page.dar
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/home_page.dart';
+import '../../features/chat/presentation/pages/chat_page.dart';
 import 'app_route_path.dart';
 
 class AppRouter {
@@ -15,6 +16,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutePath.homePath,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AppRoutePath.chatPath, // 
+        builder: (context, state) => const ChatPage(),
       ),
     ],
   );
