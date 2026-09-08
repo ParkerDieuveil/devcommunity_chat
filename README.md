@@ -134,6 +134,37 @@ Presentation
    Firebase
 ```
 
+## 🔐 Authentication
+
+L'authentification est gérée avec Firebase Authentication.
+
+Les opérations prises en charge sont :
+
+- inscription avec email/password ;
+- connexion ;
+- déconnexion ;
+- récupération de l'utilisateur courant ;
+- écoute des changements de session ;
+- gestion des erreurs d'authentification.
+
+Les mots de passe ne sont jamais stockés manuellement dans Firestore.
+
+Firebase Authentication est responsable de la gestion sécurisée des identifiants.
+
+Le flux d'authentification respecte Clean Architecture :
+
+Presentation
+    ↓
+Riverpod
+    ↓
+Use Case
+    ↓
+AuthRepository
+    ↓
+FirebaseAuthRepository
+    ↓
+Firebase Authentication
+
 Exemple pour l'authentification :
 
 ```text
