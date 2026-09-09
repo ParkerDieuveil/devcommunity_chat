@@ -1,62 +1,30 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/chat_message.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../widgets/message_bubble.dart';
 import '../widgets/message_composer.dart';
+import 'chat_provider.dart';
 
-class ChatPage extends StatefulWidget {
+class ChatPage extends ConsumerWidget {
   const ChatPage({super.key});
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Écoute de la liste des messages gérée par Riverpod
+    final messages = ref.watch(chatProvider);
 
-class _ChatPageState extends State<ChatPage> {
-  // Liste de messages de démonstration
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      id: '1',
-      text: 'Bienvenue sur le chat DevCommunity ! ',
-      senderName: 'Alice',
-      timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
-      isMine: false,
-    ),
-    ChatMessage(
-      id: '2',
-      text: 'Super ! L\'interface au style Telegram prend forme.',
-      senderName: 'Moi',
-      timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-      isMine: true,
-    ),
-  ];
-
-  void _handleSendMessage(String text) {
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          text: text,
-          senderName: 'Moi',
-          timestamp: DateTime.now(),
-          isMine: true,
-        ),
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'DevCommunity Chat',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
-              '2 membres, 1 en ligne',
-              style: TextStyle(fontSize: 12),
+              '${messages.length} message(s)',
+              style: const TextStyle(fontSize: 12),
             ),
           ],
         ),
@@ -69,20 +37,22 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
-          // Liste des messages
+          // 2. Affichage de la liste de messages
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _messages.length,
+              itemCount: messages.length,
               itemBuilder: (context, index) {
-                return MessageBubble(message: _messages[index]);
+                return MessageBubble(message: messages[index]);
               },
             ),
           ),
 
-          // Zone de saisie en bas de l'écran
+          // 3. Zone de saisie
           MessageComposer(
-            onSubmitted: _handleSendMessage,
+            onSubmitted: (text) {
+              ref.read(chatProvider.notifier).sendMessage(text);
+            },
           ),
         ],
       ),
