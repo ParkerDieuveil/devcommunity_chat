@@ -14,11 +14,9 @@ class MessageBubble extends StatelessWidget {
     final theme = Theme.of(context);
     final isMine = message.isMine;
 
-    // Formater l'heure (ex: 14:30)
     final formattedTime =
         "${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}";
 
-    // Vérifier si une image d'avatar est disponible
     final hasAvatar =
         message.senderAvatar != null && message.senderAvatar!.isNotEmpty;
 
@@ -29,7 +27,6 @@ class MessageBubble extends StatelessWidget {
             isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Avatar pour les messages reçus
           if (!isMine) ...[
             CircleAvatar(
               radius: 16,
@@ -46,8 +43,6 @@ class MessageBubble extends StatelessWidget {
             ),
             const SizedBox(width: 6),
           ],
-
-          // Bulle style Telegram
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -57,7 +52,7 @@ class MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isMine
                     ? theme.colorScheme.primaryContainer
-                    : theme.colorScheme.surfaceContainerHighest, // Remplace surfaceVariant
+                    : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -67,7 +62,6 @@ class MessageBubble extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Texte avec espace pour l'heure
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12, right: 40),
                     child: Column(
@@ -97,8 +91,6 @@ class MessageBubble extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // Heure et coche de lecture intégrées en bas à droite
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -111,9 +103,9 @@ class MessageBubble extends StatelessWidget {
                             fontSize: 11,
                             color: isMine
                                 ? theme.colorScheme.onPrimaryContainer
-                                    .withValues(alpha: 0.6) // Remplace withOpacity
+                                    .withValues(alpha: 0.6)
                                 : theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.6), // Remplace withOpacity
+                                    .withValues(alpha: 0.6),
                           ),
                         ),
                         if (isMine) ...[
