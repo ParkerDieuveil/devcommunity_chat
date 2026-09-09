@@ -4,32 +4,34 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_controller.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    await ref.read(authControllerProvider.notifier).login(
+    await ref.read(authControllerProvider.notifier).register(
       email: _emailController.text,
       password: _passwordController.text,
     );
@@ -62,7 +64,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Connexion'),
+        title: const Text('Créer un compte'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -99,8 +101,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     labelText: 'Mot de passe',
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe.';
+                    if (value == null || value.length < 6) {
+                      return 'Le mot de passe doit contenir au moins 6 caractères.';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirmer le mot de passe',
+                  ),
+                  validator: (value) {
+                    if (value != _passwordController.text) {
+                      return 'Les mots de passe ne correspondent pas.';
                     }
 
                     return null;
@@ -112,14 +131,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : _login,
+                    onPressed: isLoading ? null : _register,
                     child: isLoading
                         ? const SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(),
                     )
-                        : const Text('Se connecter'),
+                        : const Text('Créer mon compte'),
                   ),
                 ),
 
@@ -128,9 +147,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 TextButton(
                   onPressed: isLoading
                       ? null
-                      : () => context.go('/register'),
+                      : () => context.go('/login'),
                   child: const Text(
-                    'Créer un compte',
+                    'J’ai déjà un compte',
                   ),
                 ),
               ],

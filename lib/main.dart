@@ -19,15 +19,17 @@ Future<void> main() async {
   );
 }
 
-class DevCommunityChatApp extends StatelessWidget {
+class DevCommunityChatApp extends ConsumerWidget {
   const DevCommunityChatApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    
     return MaterialApp.router(
       title: 'DevCommunity Chat',
       debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.routerBase,
+      routerConfig: router,
     );
   }
 }

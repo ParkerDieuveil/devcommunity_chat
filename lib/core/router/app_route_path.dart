@@ -4,7 +4,12 @@ class AppRoutePath {
 
   static const String loginPath = "/login";
   static const String homePath = "/home";
+  static const String registerPath = "/register";
 
-
-
+  static bool isAuthRoute(String path) {
+    return path == loginPath ||
+        path == registerPath ||
+        path == root;
+  }
 }
+
