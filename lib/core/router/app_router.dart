@@ -5,6 +5,8 @@ import '../../features/auth/presentation/pages/home_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/chat/presentation/pages/chat_messages_page.dart';
+import '../../features/chat/presentation/pages/chats_page.dart';
 import 'app_route_path.dart';
 import 'auth_router_refresh.dart';
 
@@ -54,6 +56,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutePath.homePath,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AppRoutePath.chatsPath,
+        builder: (context, state) => const ChatsPage(),
+      ),
+      GoRoute(
+        path: AppRoutePath.chatDetailPath,
+        builder: (context, state) {
+          final chatId = state.pathParameters['chatId']!;
+          return ChatMessagesPage(chatId: chatId);
+        },
       ),
     ],
   );
