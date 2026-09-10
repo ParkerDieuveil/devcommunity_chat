@@ -9,19 +9,25 @@ import 'app_route_path.dart';
 import 'auth_router_refresh.dart';
 
 final authRouterRefreshProvider = Provider<AuthRouterRefresh>((ref) {
-  final auth = ref.watch(firebaseAuthProvider);
-  return AuthRouterRefresh(auth);
+  final refresh = AuthRouterRefresh();
+
+  // Relance le redirect à chaque changement de session (pas seulement au boot).
+  ref.listen(authStateProvider, (previous, next) => refresh.notify());
+
+  ref.onDispose(refresh.dispose);
+  return refresh;
 });
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(firebaseAuthProvider);
   final refresh = ref.watch(authRouterRefreshProvider);
 
   return GoRouter(
     initialLocation: AppRoutePath.loginPath,
     refreshListenable: refresh,
     redirect: (context, state) {
-      final isLoggedIn = auth.currentUser != null;
+      // read (pas watch) : évite de recréer GoRouter à chaque tick auth.
+      final user = ref.read(currentUserProvider);
+      final isLoggedIn = user != null;
       final currentPath = state.uri.path;
 
       final isAuthRoute = AppRoutePath.isAuthRoute(currentPath);
