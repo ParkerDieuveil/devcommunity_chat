@@ -1,4 +1,4 @@
-/// Profil côté Firestore — pas le même truc que AppUser (auth).
+/// Profil côté Firestore, pas le même truc que AppUser (auth).
 class UserProfileEntity {
   final String uid;
   final String displayName;
