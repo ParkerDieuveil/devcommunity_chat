@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../chat/domain/exceptions/chat_exceptions.dart';
+import '../../../chat/presentation/providers/chat_provider.dart';
 import '../../domain/entities/app_user.dart';
 import 'auth_provider.dart';
 
@@ -15,6 +17,15 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
     return const AsyncData(null);
   }
 
+  // Auth déjà OK : un échec Firestore ne doit pas casser le login.
+  Future<void> _syncProfile(AppUser user) async {
+    try {
+      await ref.read(syncUserProfileUseCaseProvider).call(user);
+    } on ChatRepositoryException {
+      // best-effort
+    }
+  }
+
   Future<void> register({
     required String email,
     required String password,
@@ -26,6 +37,8 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
         email: email,
         password: password,
       );
+
+      await _syncProfile(user);
 
       state = AsyncData(user);
     } on FirebaseAuthException catch (error, stackTrace) {
@@ -52,6 +65,8 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
         email: email,
         password: password,
       );
+
+      await _syncProfile(user);
 
       state = AsyncData(user);
     } on FirebaseAuthException catch (error, stackTrace) {
