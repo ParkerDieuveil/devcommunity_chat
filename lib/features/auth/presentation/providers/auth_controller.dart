@@ -6,8 +6,11 @@ import '../../../chat/presentation/providers/chat_provider.dart';
 import '../../domain/entities/app_user.dart';
 import 'auth_provider.dart';
 
+/// Actions auth (login / register / logout) + AsyncValue de ces actions.
+/// Ne remplace pas [currentUserProvider] pour savoir qui est connecté :
+/// après un hot restart, ce state repart à null alors que la session Firebase vit encore.
 final authControllerProvider =
-NotifierProvider<AuthController, AsyncValue<AppUser?>>(
+    NotifierProvider<AuthController, AsyncValue<AppUser?>>(
   AuthController.new,
 );
 
