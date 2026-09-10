@@ -15,6 +15,7 @@ import '../../domain/usecases/sync_user_profile_use_case.dart';
 import '../../domain/usecases/watch_messages_use_case.dart';
 import '../../domain/usecases/watch_user_chats_use_case.dart';
 
+/// Infra Firestore (datasources uniquement).
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
@@ -64,11 +65,15 @@ final syncUserProfileUseCaseProvider = Provider<SyncUserProfileUseCase>((ref) {
   return SyncUserProfileUseCase(ref.watch(userProfileRepositoryProvider));
 });
 
+/// Conversations (ChatEntity) du user, temps réel.
+/// Usage : `ref.watch(userChatsProvider(uid))`
 final userChatsProvider =
     StreamProvider.family<List<ChatEntity>, String>((ref, userId) {
   return ref.watch(watchUserChatsUseCaseProvider).call(userId);
 });
 
+/// Messages d'un chat, temps réel.
+/// Usage : `ref.watch(chatMessagesProvider(chatId))`
 final chatMessagesProvider =
     StreamProvider.family<List<MessageEntity>, String>((ref, chatId) {
   return ref.watch(watchMessagesUseCaseProvider).call(chatId);
