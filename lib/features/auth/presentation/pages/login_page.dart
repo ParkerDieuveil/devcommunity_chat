@@ -127,35 +127,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Logo
+                    // Logo DevCommunity Chat
                     Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.forum_rounded,
-                          size: 38,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                      child: Image.asset(
+                        'assets/images/dev.png',
+                        width: 110,
+                        height: 110,
+                        fit: BoxFit.contain,
                       ),
                     ),
 
-                    const SizedBox(height: 24),
 
-                    const Text(
-                      'DevCommunity Chat',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
 
                     const SizedBox(height: 8),
 
