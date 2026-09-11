@@ -1,5 +1,3 @@
-
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +38,7 @@ void main() {
         UserCredential? credential;
 
         try {
-          credential = await auth.createUserWithEmailAndPassword(
+          credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: email,
             password: password,
           );
@@ -50,10 +48,6 @@ void main() {
           expect(user, isNotNull);
           expect(user!.email, email);
           expect(user.uid, isNotEmpty);
-
-          print('✅ Compte créé');
-          print('UID : ${user.uid}');
-          print('Email : ${user.email}');
         } finally {
           // Suppression du compte de test.
           await credential?.user?.delete();
@@ -68,11 +62,9 @@ void main() {
             'test_login_${DateTime.now().millisecondsSinceEpoch}@example.com';
         const password = 'TestPassword123!';
 
-        UserCredential? credential;
-
         try {
-          // Création du compte de test.
-          credential = await auth.createUserWithEmailAndPassword(
+          // ✅ Correction: Création du compte sans stocker la variable inutilisée
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: email,
             password: password,
           );
@@ -80,8 +72,7 @@ void main() {
           await auth.signOut();
 
           // Connexion.
-          final loginCredential =
-          await auth.signInWithEmailAndPassword(
+          final loginCredential = await auth.signInWithEmailAndPassword(
             email: email,
             password: password,
           );
@@ -92,9 +83,6 @@ void main() {
           expect(user!.email, email);
           expect(auth.currentUser, isNotNull);
           expect(auth.currentUser!.uid, user.uid);
-
-          print('✅ Connexion réussie');
-          print('Utilisateur connecté : ${user.email}');
         } finally {
           // L'utilisateur doit être connecté pour être supprimé.
           await auth.currentUser?.delete();
@@ -120,8 +108,6 @@ void main() {
           await auth.signOut();
 
           expect(auth.currentUser, isNull);
-
-          print('✅ Déconnexion réussie');
         } catch (e) {
           await auth.currentUser?.delete();
           rethrow;
@@ -137,8 +123,7 @@ void main() {
         const password = 'TestPassword123!';
 
         try {
-          final credential =
-          await auth.createUserWithEmailAndPassword(
+          final credential = await auth.createUserWithEmailAndPassword(
             email: email,
             password: password,
           );
@@ -148,9 +133,6 @@ void main() {
           expect(user, isNotNull);
           expect(user!.uid, credential.user!.uid);
           expect(user.email, email);
-
-          print('✅ Current user récupéré');
-          print('UID : ${user.uid}');
         } finally {
           await auth.currentUser?.delete();
         }
@@ -194,8 +176,6 @@ void main() {
           );
 
           expect(states.any((user) => user == null), isTrue);
-
-          print('✅ authStateChanges fonctionne');
         } finally {
           await subscription.cancel();
           await auth.currentUser?.delete();
@@ -227,8 +207,6 @@ void main() {
               isA<FirebaseAuthException>(),
             ),
           );
-
-          print('✅ Erreur Firebase correctement détectée');
         } finally {
           await auth.currentUser?.delete();
         }
@@ -250,8 +228,6 @@ void main() {
             isA<FirebaseAuthException>(),
           ),
         );
-
-        print('✅ Mot de passe invalide correctement refusé');
       },
     );
   });
