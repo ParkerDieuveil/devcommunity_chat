@@ -1,20 +1,7 @@
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+/// Notifie GoRouter quand la session Riverpod change (login / logout).
+/// Pas d'abonnement Firebase ici : le refresh est branché via ref.listen.
 class AuthRouterRefresh extends ChangeNotifier {
-  AuthRouterRefresh(FirebaseAuth auth) {
-    _subscription = auth.authStateChanges().listen(
-          (_) => notifyListeners(),
-    );
-  }
-
-  late final StreamSubscription<User?> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
+  void notify() => notifyListeners();
 }
