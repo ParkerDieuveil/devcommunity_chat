@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/profile/presentation/pages/profile_screen.dart';
 import 'navigation_provider.dart';
 
 class MainNavigationScreen extends ConsumerWidget {
@@ -14,7 +13,7 @@ class MainNavigationScreen extends ConsumerWidget {
     final pages = [
       const Center(child: Text('Accueil')),
       const Center(child: Text('Chat')),
-      const ProfileScreen(),
+      const Center(child: Text('Profil')),
     ];
 
     return Scaffold(

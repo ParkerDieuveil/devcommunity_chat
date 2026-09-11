@@ -6,8 +6,9 @@ abstract interface class ProfileRepository {
   Future<void> saveProfile(ProfileEntity profile);
 
   Future<ProfileEntity> updateProfile({
+    required String userId,
     required String name,
-    String? avatarUrl,
+    String? photoUrl,
     String? email,
     String? bio,
   });

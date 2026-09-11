@@ -7,14 +7,16 @@ class UpdateProfile {
   UpdateProfile(this.repository);
 
   Future<ProfileEntity> call({
+    required String userId,
     required String name,
     String? avatarUrl,
     String? email,
     String? bio,
   }) {
     return repository.updateProfile(
+      userId: userId,
       name: name,
-      avatarUrl: avatarUrl,
+      photoUrl: avatarUrl,
       email: email,
       bio: bio,
     );

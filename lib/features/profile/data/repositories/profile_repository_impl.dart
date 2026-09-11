@@ -13,7 +13,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     final data = await datasource.getProfile(userId);
 
     if (data == null) {
-      throw Exception('Profile not found for userId: $userId');
+      return null;
     }
 
     return ProfileModel.fromJson({...data, 'id': userId});
@@ -28,15 +28,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<ProfileEntity> updateProfile({
+    required String userId,
     required String name,
-    String? avatarUrl,
+    String? photoUrl,
     String? email,
     String? bio,
   }) async {
-    // Assuming you have a way to get the current user's ID
-    final userId =
-        'currentUserId'; // Replace with actual logic to get current user ID
-
     final profile = await getProfile(userId);
 
     if (profile == null) {
@@ -44,14 +41,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
 
     final updatedProfile = ProfileModel(
-      id: profile.id,
+      id: userId,
       displayname: name,
-      avatarUrl: avatarUrl ?? profile.avatarUrl,
+      photoUrl: photoUrl ?? profile.photoUrl,
       email: email ?? profile.email,
       bio: bio ?? profile.bio,
     );
 
-    await saveProfile(updatedProfile);
+    await datasource.updateProfile(userId, updatedProfile.toJson());
 
     return updatedProfile;
   }

@@ -1,3 +1,4 @@
+import 'package:devcommunitychat/features/profile/presentation/pages/profile_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,6 +49,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutePath.homePath,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AppRoutePath.profilePath,
+        builder: (context, state) => const ProfilePage(),
       ),
     ],
   );

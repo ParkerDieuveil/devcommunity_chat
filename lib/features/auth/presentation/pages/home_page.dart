@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_controller.dart';
+import 'package:devcommunitychat/core/router/navigation_provider.dart';
+import '../../../chat/presentation/pages/chat_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -9,6 +12,11 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
+
+    final selectedTab = ref.watch(mainTabProvider);
+    final selectedIndex = selectedTab == MainTab.profile ? 1 : 0;
+
+    const pages = [ChatPage(), ProfilePage()];
 
     return Scaffold(
       appBar: AppBar(
@@ -18,19 +26,33 @@ class HomePage extends ConsumerWidget {
             onPressed: authState.isLoading
                 ? null
                 : () {
-              ref
-                  .read(authControllerProvider.notifier)
-                  .logout();
-            },
+                    ref.read(authControllerProvider.notifier).logout();
+                  },
             icon: const Icon(Icons.logout),
             tooltip: 'Déconnexion',
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Bienvenue sur DevCommunity Chat',
-        ),
+      body: IndexedStack(index: selectedIndex, children: pages),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          ref
+              .read(mainTabProvider.notifier)
+              .selectTab(index == 0 ? MainTab.chat : MainTab.profile);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.chat_outlined),
+            selectedIcon: Icon(Icons.chat),
+            label: 'Chat',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
       ),
     );
   }

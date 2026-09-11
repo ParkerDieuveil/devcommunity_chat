@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum MainTab { home, chat, profile }
+enum MainTab { chat, profile }
 
 final mainTabProvider = NotifierProvider<MainTabNotifier, MainTab>(
   MainTabNotifier.new,
@@ -9,7 +9,7 @@ final mainTabProvider = NotifierProvider<MainTabNotifier, MainTab>(
 class MainTabNotifier extends Notifier<MainTab> {
   @override
   MainTab build() {
-    return MainTab.home;
+    return MainTab.chat;
   }
 
   void selectTab(MainTab tab) {

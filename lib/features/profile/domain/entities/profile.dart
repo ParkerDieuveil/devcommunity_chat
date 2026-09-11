@@ -3,14 +3,14 @@ class ProfileEntity {
   final String displayname;
   final String email;
   final String bio;
-  final String avatarUrl;
+  final String photoUrl;
 
   ProfileEntity({
     required this.id,
     required this.displayname,
     required this.email,
     required this.bio,
-    required this.avatarUrl,
+    required this.photoUrl,
   });
 
   // factory ProfileEntity.fromJson(Map<String, dynamic> json) {
