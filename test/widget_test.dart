@@ -4,7 +4,7 @@ import 'package:devcommunitychat/features/profile/presentation/widgets/profile_t
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter/material.dart';
-import 'package:devcommunitychat/features/profile/presentation/profile_screen.dart';
+import 'package:devcommunitychat/features/profile/presentation/pages/profile_screen.dart';
 
 void main() {
   final testAvatar = MemoryImage(
@@ -98,7 +98,8 @@ void main() {
     expect(
       find.byWidgetPredicate(
         (widget) =>
-            widget is RichText && widget.text.toPlainText().contains('@alex_dev'),
+            widget is RichText &&
+            widget.text.toPlainText().contains('@alex_dev'),
       ),
       findsOneWidget,
     );

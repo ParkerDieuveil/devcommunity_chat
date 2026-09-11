@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'widgets/profile_liste_tile.dart';
-import 'widgets/profile_icon_container.dart';
-import 'widgets/profile_theme_option.dart';
-import 'widgets/profile_stat_tile.dart';
+import '../widgets/profile_liste_tile.dart';
+import '../widgets/profile_icon_container.dart';
+import '../widgets/profile_theme_option.dart';
+import '../widgets/profile_stat_tile.dart';
 
 class ProfileScreen extends StatefulWidget {
   final ImageProvider<Object> avatarImage;

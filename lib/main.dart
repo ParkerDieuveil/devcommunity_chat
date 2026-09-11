@@ -1,8 +1,8 @@
-import 'package:devcommunitychat/features/profile/presentation/profile_screen.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:devcommunitychat/core/router/main_navigation_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,7 @@ class DevCommunityChatApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'DevCommunity Chat',
-      home: const ProfileScreen(),
+      home: const MainNavigationScreen(),
     );
   }
 }
