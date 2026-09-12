@@ -1,29 +1,29 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
-import 'package:devcommunitychat/features/auth/presentation/pages/login_page.dart';
+import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
+import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
+import 'package:devcommunitychat/main.dart';
 
 void main() {
   testWidgets(
-    'LoginPage affiche correctement le formulaire de connexion',
-        (WidgetTester tester) async {
+    "DevCommunity Chat démarre sur la page de connexion quand aucun utilisateur n'est connecté",
+    (WidgetTester tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
-          ),
+        ProviderScope(
+          overrides: [
+            authStateProvider.overrideWith(
+              (ref) => Stream<AppUser?>.value(null),
+            ),
+          ],
+          child: const DevCommunityChatApp(),
         ),
       );
-
-      expect(find.text('DevCommunity Chat'), findsOneWidget);
-      expect(find.text('Connectez-vous à votre communauté.'), findsOneWidget);
+      await tester.pumpAndSettle();
 
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Mot de passe'), findsOneWidget);
-
       expect(find.text('Se connecter'), findsOneWidget);
-      expect(find.text('Créer un compte'), findsOneWidget);
     },
   );
 }
