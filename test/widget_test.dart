@@ -12,7 +12,7 @@ void main() {
       const ProviderScope(child: MaterialApp(home: LoginPage())),
     );
 
-    expect(find.text('DevCommunity Chat'), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
     expect(find.text('Connectez-vous à votre communauté.'), findsOneWidget);
 
     expect(find.text('Email'), findsOneWidget);
