@@ -1,4 +1,4 @@
-# DevCommunity Chat 🚀
+# DevCommunity Chat
 
 Application mobile de messagerie destinée aux équipes de développement et aux communautés de développeurs.
 
@@ -6,7 +6,7 @@ Le projet est réalisé dans le cadre du **FlutterFire Summer Camp 2026**.
 
 ---
 
-## 📱 Présentation
+## Présentation
 
 DevCommunity Chat permet aux développeurs de communiquer au sein d'une équipe ou d'une communauté grâce à une interface de messagerie moderne.
 
@@ -33,7 +33,7 @@ L'application a pour objectif de proposer une expérience de communication simpl
 
 ---
 
-## 🛠️ Technologies
+## Technologies
 
 * Flutter
 * Dart
@@ -47,7 +47,7 @@ L'application a pour objectif de proposer une expérience de communication simpl
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 Le projet utilise **Clean Architecture** afin de séparer les responsabilités et permettre à plusieurs développeurs de travailler indépendamment sur les différentes fonctionnalités.
 
@@ -116,7 +116,7 @@ Contient :
 
 ---
 
-## 🔄 Flux de données
+## Flux de données
 
 Le principe général est :
 
@@ -133,6 +133,37 @@ Presentation
       ↓
    Firebase
 ```
+
+## Authentication
+
+L'authentification est gérée avec Firebase Authentication.
+
+Les opérations prises en charge sont :
+
+- inscription avec email/password ;
+- connexion ;
+- déconnexion ;
+- récupération de l'utilisateur courant ;
+- écoute des changements de session ;
+- gestion des erreurs d'authentification.
+
+Les mots de passe ne sont jamais stockés manuellement dans Firestore.
+
+Firebase Authentication est responsable de la gestion sécurisée des identifiants.
+
+Le flux d'authentification respecte Clean Architecture :
+
+Presentation
+    ↓
+Riverpod
+    ↓
+Use Case
+    ↓
+AuthRepository
+    ↓
+FirebaseAuthRepository
+    ↓
+Firebase Authentication
 
 Exemple pour l'authentification :
 
@@ -152,7 +183,7 @@ Firebase Authentication
 
 ---
 
-## 🧭 Navigation
+## Navigation
 
 La navigation est gérée avec **GoRouter**.
 
@@ -179,7 +210,7 @@ Utilisateur connecté
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Prérequis
 
@@ -204,7 +235,7 @@ flutter doctor
 
 ---
 
-## 🚀 Installation du projet
+## Installation du projet
 
 Cloner le repository :
 
@@ -226,7 +257,7 @@ flutter pub get
 
 ---
 
-## 🔥 Firebase
+## Firebase
 
 Le projet utilise Firebase.
 
@@ -248,7 +279,7 @@ Les règles de sécurité Firebase doivent être correctement configurées avant
 
 ---
 
-## ▶️ Lancer l'application
+## Lancer l'application
 
 Utiliser :
 
@@ -270,7 +301,7 @@ flutter run -d <device>
 
 ---
 
-## 🧪 Tests
+## Tests
 
 Exécuter les tests :
 
@@ -294,7 +325,7 @@ flutter run
 
 ---
 
-## 🌿 Git Workflow
+## Git Workflow
 
 Le projet utilise trois niveaux de branches :
 
@@ -344,7 +375,7 @@ feature/firebase-auth → develop
 
 ---
 
-## 📝 Conventions de commits
+## Conventions de commits
 
 | Préfixe     | Utilisation               |
 | ----------- | ------------------------- |
@@ -368,7 +399,7 @@ chore: update dependencies
 
 ---
 
-## 📐 Conventions de code
+## Conventions de code
 
 ### Fichiers
 
@@ -446,7 +477,7 @@ SendMessageUseCase
 
 ---
 
-## 👥 Collaboration
+## Collaboration
 
 Le développement suit le principe :
 
@@ -478,7 +509,7 @@ Chaque membre doit connaître :
 
 ---
 
-## 📅 Organisation quotidienne
+## Organisation quotidienne
 
 Une courte réunion quotidienne de **10 à 15 minutes** permet de répondre à trois questions :
 
@@ -490,7 +521,7 @@ Les problèmes techniques doivent être signalés rapidement afin que l'équipe 
 
 ---
 
-## 🎯 Objectif du projet
+## Objectif du projet
 
 L'objectif est de construire une application Flutter fonctionnelle, maintenable et développée en collaboration selon les bonnes pratiques professionnelles.
 
