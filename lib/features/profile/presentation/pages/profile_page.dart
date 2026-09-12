@@ -15,7 +15,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
   const ProfilePage({
     super.key,
-    this.avatarImage = const NetworkImage('https://i.pravatar.cc/300'),
+    this.avatarImage = const AssetImage('assets/images/photo_profile.jpg'),
   });
 
   @override

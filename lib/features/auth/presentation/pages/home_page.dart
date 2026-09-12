@@ -7,6 +7,7 @@ import '../providers/auth_controller.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import 'home_content.dart';
 import '../providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -18,9 +19,9 @@ class HomePage extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     final selectedTab = ref.watch(mainTabProvider);
-    final selectedIndex = selectedTab == MainTab.profile ? 1 : 0;
+    final selectedIndex = selectedTab.index;
 
-    const pages = [ChatPage(), ProfilePage()];
+    const pages = [HomeContent(), ChatPage(), ProfilePage()];
 
     return Scaffold(
       appBar: AppBar(
@@ -41,14 +42,17 @@ class HomePage extends ConsumerWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          ref
-              .read(mainTabProvider.notifier)
-              .selectTab(index == 0 ? MainTab.chat : MainTab.profile);
+          ref.read(mainTabProvider.notifier).selectTab(MainTab.values[index]);
         },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.chat_outlined),
             selectedIcon: Icon(Icons.chat),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Chat',
           ),
           NavigationDestination(
