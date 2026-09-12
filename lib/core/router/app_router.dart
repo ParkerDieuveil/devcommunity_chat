@@ -61,6 +61,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutePath.profilePath,
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
         path: AppRoutePath.chatsPath,
         builder: (context, state) => const ChatsPage(),
       ),
