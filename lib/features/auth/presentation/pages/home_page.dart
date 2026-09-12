@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_route_path.dart';
 import '../providers/auth_controller.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import '../providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authControllerProvider);
+    final actionState = ref.watch(authControllerProvider);
+    final user = ref.watch(currentUserProvider);
 
     final selectedTab = ref.watch(mainTabProvider);
     final selectedIndex = selectedTab == MainTab.profile ? 1 : 0;
@@ -23,7 +27,7 @@ class HomePage extends ConsumerWidget {
         title: const Text('DevCommunity Chat'),
         actions: [
           IconButton(
-            onPressed: authState.isLoading
+            onPressed: actionState.isLoading
                 ? null
                 : () {
                     ref.read(authControllerProvider.notifier).logout();
