@@ -1,12 +1,12 @@
 # Rapport de validation finale — DevCommunity Chat
 
-Vérification effectuée sur la branche `feature/tests-qa` (à partir de `develop` synchronisé) le 08/09/2026.
+Vérification effectuée sur la branche `feature/tests-qa` (fusionnée avec `develop` à jour) le 12/09/2026.
 
 ## flutter analyze
 
 ```
 Analyzing devcommunity_chat...
-No issues found! (ran in 5.3s)
+No issues found!
 ```
 
 ✅ Aucun warning ni erreur.
@@ -14,24 +14,26 @@ No issues found! (ran in 5.3s)
 ## flutter test
 
 ```
-00:03 +6: All tests passed!
+🎉 18 tests passed.
 ```
 
-✅ 6/6 tests passent :
-- `test/widget_test.dart` — démarrage de l'app sur `LoginPage`
-- `test/features/auth/login_page_test.dart` — affichage de `LoginPage` + navigation vers `HomePage`
-- `test/features/auth/home_page_test.dart` — affichage de `HomePage`
-- `test/unit/app_route_path_test.dart` — constantes de routes
+✅ 18/18 tests passent :
+- `test/widget_test.dart` — démarrage de l'app sur `LoginPage` sans utilisateur connecté
+- `test/unit/app_route_path_test.dart` — constantes et helpers de routes (5 tests)
+- `test/features/auth/data/models/user_model_test.dart` — modèle utilisateur (existant, non modifié)
+- `test/features/auth/presentation/pages/login_page_test.dart` — rendu + validations `LoginPage` (4 tests)
+- `test/features/auth/presentation/pages/register_page_test.dart` — rendu + validations `RegisterPage` (4 tests)
+- `test/features/chat/message_bubble_test.dart` — rendu du composant `MessageBubble` (3 tests)
 
 ## Portée et limites
 
-Cette validation ne couvre que le périmètre actuellement présent sur `develop` (démarrage + navigation basique). Les fonctionnalités d'authentification réelle, de chat, de profil et de temps réel Firestore ne sont pas encore mergées dans `develop` et n'ont donc pas pu être testées — voir [`QA_CHECKLIST.md`](./QA_CHECKLIST.md) et [`BUG_REPORT.md`](./BUG_REPORT.md).
+Cette validation couvre : démarrage de l'app, navigation basique, UI et validations de connexion/inscription, et le composant `MessageBubble`. Ne sont pas couverts par des tests automatisés : déconnexion, pages de chat (liste/conversation/envoi), réception temps réel Firestore, profil (non implémenté), et les appels réels aux services Firebase/Firestore — voir [`QA_CHECKLIST.md`](./QA_CHECKLIST.md) et [`BUG_REPORT.md`](./BUG_REPORT.md).
 
 ## Critères d'acceptation (Issue #8)
 
 | Critère | Statut |
 |---|---|
-| Les fonctionnalités MVP principales sont testées | ⏳ Partiel — seul le périmètre actuel de `develop` est testé |
+| Les fonctionnalités MVP principales sont testées | ⏳ Partiel — auth (UI/validation) et `MessageBubble` couverts ; chat, temps réel, profil et déconnexion restent à couvrir |
 | Aucun bug bloquant connu | ✅ |
 | `flutter analyze` passe | ✅ |
 | `flutter test` passe | ✅ |

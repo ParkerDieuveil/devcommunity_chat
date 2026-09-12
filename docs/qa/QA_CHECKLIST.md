@@ -1,22 +1,23 @@
 # Checklist QA — DevCommunity Chat
 
-Basée sur l'Issue #8 (Tests & QA), état vérifié sur la branche `develop` au 08/09/2026.
+Basée sur l'Issue #8 (Tests & QA), état vérifié sur `develop` (merge `feature/chat-ui`, `feature/firebase-auth`, `feature/auth-ui`, `feature/state-management`, `feat/firestore-chat` inclus) au 12/09/2026.
 
-Légende : ✅ testé et fonctionnel · ⏳ pas encore implémenté sur `develop` (existe potentiellement sur une branche `feature/*` non mergée) · ❌ bug bloquant
+Légende : ✅ testé et fonctionnel · ⏳ pas encore implémenté sur `develop` · ❌ bug bloquant
 
 | Fonctionnalité | Statut | Détails |
 |---|---|---|
-| Démarrage de l'application | ✅ | L'app démarre et affiche `LoginPage` (`test/widget_test.dart`) |
-| Inscription | ⏳ | Aucune page/register sur `develop` (prévu dans `feature/auth-ui` / `feature/firebase-auth`) |
-| Connexion | ⏳ | `LoginPage` actuelle est un stub UI (bouton "Continuer" sans appel Firebase) — pas d'auth réelle sur `develop` |
-| Déconnexion | ⏳ | Aucune fonctionnalité de déconnexion présente sur `develop` |
-| Navigation | ✅ | Navigation `LoginPage` → `HomePage` via `go_router` testée (`test/features/auth/login_page_test.dart`) |
-| Affichage du profil | ⏳ | Dossier `features/profile/presentation` vide sur `develop` (`.gitkeep` uniquement) |
-| Affichage du Chat | ⏳ | Dossier `features/chat/presentation` vide sur `develop` (`.gitkeep` uniquement) |
-| Envoi d'un message | ⏳ | Aucune UI/logique de chat sur `develop` |
-| Réception temps réel | ⏳ | Aucune intégration Firestore sur `develop` |
-| États loading/error/empty | ⏳ | Aucun état de ce type n'existe encore (pas d'appel réseau/Firebase dans l'UI actuelle) |
+| Démarrage de l'application | ✅ | L'app démarre sur `LoginPage` sans utilisateur connecté (`test/widget_test.dart`) |
+| Inscription | ✅ | `RegisterPage` : rendu + validations (email vide/incorrect, mot de passe trop court, confirmation) testées (`test/features/auth/presentation/pages/register_page_test.dart`). Appel réel à Firebase Auth non testé (pas de mocks en place) |
+| Connexion | ✅ | `LoginPage` : rendu + validations (email vide/incorrect, mot de passe vide) testées. Appel réel à Firebase Auth non testé |
+| Déconnexion | ⏳ | Bouton présent sur `HomePage` (`AuthController.logout()`), mais aucun test automatisé dessus |
+| Navigation | ✅ | Redirection selon l'état d'auth (`routerProvider`) couverte indirectement par le smoke test ; routes couvertes unitairement (`test/unit/app_route_path_test.dart`) |
+| Affichage du profil | ⏳ | `features/profile/presentation` toujours vide (`.gitkeep` uniquement) |
+| Affichage du Chat | ⏳ | `ChatsPage`, `ChatMessagesPage`, `ChatPage` existent sur `develop` mais aucun test automatisé |
+| Envoi d'un message | ⏳ | `MessageComposer` et `SendMessageUseCase` existent mais aucun test automatisé |
+| Réception temps réel | ⏳ | Couche Firestore (`ChatRepositoryImpl`, `watchMessagesUseCase`) en place mais aucun test automatisé (nécessite mocks Firestore) |
+| Composant `MessageBubble` | ✅ | Rendu testé : message reçu/envoyé, avatar/initiale, icône de lecture (`test/features/chat/message_bubble_test.dart`) |
+| États loading/error/empty | ⏳ | `AuthController` gère `AsyncLoading`/`AsyncError` (visible dans l'UI login/register) mais pas testé automatiquement |
 
 ## Résumé
 
-Sur l'état actuel de `develop`, seules les fonctionnalités de démarrage et de navigation basique existent et sont couvertes par des tests automatisés. Les fonctionnalités métier (auth, chat, profil, temps réel) sont développées sur des branches `feature/*` non encore mergées et devront être re-testées dès leur intégration dans `develop`.
+Les parcours d'authentification (UI + validations) et le composant `MessageBubble` sont couverts par des tests automatisés. Le chat (envoi, réception temps réel, pages), le profil, la déconnexion et les appels réels à Firebase/Firestore restent à tester — cela nécessite l'introduction d'une librairie de mocks (ex. `mocktail`) pour isoler les tests des services externes.
