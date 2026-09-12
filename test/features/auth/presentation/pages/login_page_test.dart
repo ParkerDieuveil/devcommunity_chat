@@ -19,7 +19,11 @@ void main() {
     testWidgets('affiche les éléments principaux', (tester) async {
       await pumpLoginPage(tester);
 
-      expect(find.text('DevCommunity Chat'), findsOneWidget);
+      expect(find.byType(Image), findsOneWidget);
+      expect(
+        find.text('Connectez-vous à votre communauté.'),
+        findsOneWidget,
+      );
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Mot de passe'), findsOneWidget);
       expect(find.text('Se connecter'), findsOneWidget);
