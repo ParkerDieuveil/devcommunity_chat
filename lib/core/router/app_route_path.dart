@@ -4,6 +4,9 @@ class AppRoutePath {
   static const String loginPath = "/login";
   static const String homePath = "/home";
   static const String registerPath = "/register";
+
+  // Route du chat
+  static const String chatPath = "/chat";
   static const String chatsPath = "/chats";
   static const String chatDetailPath = "/chats/:chatId";
 
