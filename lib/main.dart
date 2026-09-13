@@ -5,19 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
+//import 'package:devcommunitychat/core/router/main_navigation_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(
-    const ProviderScope(
-      child: DevCommunityChatApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: DevCommunityChatApp()));
 }
 
 class DevCommunityChatApp extends ConsumerWidget {
@@ -26,7 +21,7 @@ class DevCommunityChatApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
       title: 'DevCommunity Chat',
       debugShowCheckedModeBanner: false,
