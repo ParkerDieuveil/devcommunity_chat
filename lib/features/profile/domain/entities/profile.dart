@@ -5,31 +5,53 @@ class ProfileEntity {
   final String bio;
   final String photoUrl;
 
-  ProfileEntity({
+  /// Titre / rôle affiché sous le @username (ex. "Mobile Engineer").
+  final String title;
+
+  /// Préférence notifications push (persistée Firestore).
+  final bool pushNotificationsEnabled;
+
+  final DateTime? createdAt;
+  final DateTime? lastSeen;
+  final bool isOnline;
+
+  const ProfileEntity({
     required this.id,
     required this.displayname,
     required this.email,
     required this.bio,
     required this.photoUrl,
+    this.title = '',
+    this.pushNotificationsEnabled = true,
+    this.createdAt,
+    this.lastSeen,
+    this.isOnline = false,
   });
 
-  // factory ProfileEntity.fromJson(Map<String, dynamic> json) {
-  //   return ProfileEntity(
-  //     id: json['id'] as String,
-  //     displayname: json['displayname'] as String,
-  //     email: json['email'] as String,
-  //     bio: json['bio'] as String,
-  //     avatarUrl: json['avatarUrl'] as String,
-  //   );
-  // }
-
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'id': id,
-  //     'displayname': displayname,
-  //     'email': email,
-  //     'bio': bio,
-  //     'avatarUrl': avatarUrl,
-  //   };
-  // }
+  ProfileEntity copyWith({
+    String? id,
+    String? displayname,
+    String? email,
+    String? bio,
+    String? photoUrl,
+    String? title,
+    bool? pushNotificationsEnabled,
+    DateTime? createdAt,
+    DateTime? lastSeen,
+    bool? isOnline,
+  }) {
+    return ProfileEntity(
+      id: id ?? this.id,
+      displayname: displayname ?? this.displayname,
+      email: email ?? this.email,
+      bio: bio ?? this.bio,
+      photoUrl: photoUrl ?? this.photoUrl,
+      title: title ?? this.title,
+      pushNotificationsEnabled:
+          pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      createdAt: createdAt ?? this.createdAt,
+      lastSeen: lastSeen ?? this.lastSeen,
+      isOnline: isOnline ?? this.isOnline,
+    );
+  }
 }

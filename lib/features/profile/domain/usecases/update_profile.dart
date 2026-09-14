@@ -1,5 +1,5 @@
-import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
-import 'package:devcommunitychat/features/profile/domain/repositories/profile_repository.dart';
+import '../entities/profile.dart';
+import '../repositories/profile_repository.dart';
 
 class UpdateProfile {
   final ProfileRepository repository;
@@ -12,6 +12,7 @@ class UpdateProfile {
     String? avatarUrl,
     String? email,
     String? bio,
+    String? title,
   }) {
     return repository.updateProfile(
       userId: userId,
@@ -19,6 +20,7 @@ class UpdateProfile {
       photoUrl: avatarUrl,
       email: email,
       bio: bio,
+      title: title,
     );
   }
 }
