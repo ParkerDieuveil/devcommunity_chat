@@ -8,11 +8,7 @@ void main() {
   group('LoginPage', () {
     Future<void> pumpLoginPage(WidgetTester tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: LoginPage())),
       );
     }
 
@@ -36,10 +32,7 @@ void main() {
       await tester.tap(find.text('Se connecter'));
       await tester.pump();
 
-      expect(
-        find.text('Veuillez entrer votre email.'),
-        findsOneWidget,
-      );
+      expect(find.text('Veuillez entrer votre email.'), findsOneWidget);
     });
 
     testWidgets('valide un email incorrect', (tester) async {
@@ -70,10 +63,7 @@ void main() {
       await tester.tap(find.text('Se connecter'));
       await tester.pump();
 
-      expect(
-        find.text('Veuillez entrer votre mot de passe.'),
-        findsOneWidget,
-      );
+      expect(find.text('Veuillez entrer votre mot de passe.'), findsOneWidget);
     });
   });
 }
