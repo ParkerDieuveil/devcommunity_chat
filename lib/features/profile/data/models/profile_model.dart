@@ -1,23 +1,23 @@
-import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../domain/entities/profile.dart';
 
 class ProfileModel extends ProfileEntity {
-  ProfileModel({
+  const ProfileModel({
     required super.id,
     required super.displayname,
     required super.email,
     required super.bio,
     required super.photoUrl,
+    super.title,
+    super.pushNotificationsEnabled,
+    super.createdAt,
+    super.lastSeen,
+    super.isOnline,
   });
 
   factory ProfileModel.fromMap(Map<String, dynamic> map) {
-    return ProfileModel(
-      id: map['uid'] as String? ?? map['id'] as String? ?? '',
-      displayname:
-          map['displayName'] as String? ?? map['displayname'] as String? ?? '',
-      email: map['email'] as String? ?? '',
-      bio: map['bio'] as String? ?? '',
-      photoUrl: map['photoUrl'] as String? ?? '',
-    );
+    return ProfileModel.fromJson(map);
   }
 
   factory ProfileModel.fromEntity(ProfileEntity entity) {
@@ -27,6 +27,11 @@ class ProfileModel extends ProfileEntity {
       email: entity.email,
       bio: entity.bio,
       photoUrl: entity.photoUrl,
+      title: entity.title,
+      pushNotificationsEnabled: entity.pushNotificationsEnabled,
+      createdAt: entity.createdAt,
+      lastSeen: entity.lastSeen,
+      isOnline: entity.isOnline,
     );
   }
 
@@ -40,9 +45,17 @@ class ProfileModel extends ProfileEntity {
       email: json['email'] as String? ?? '',
       bio: json['bio'] as String? ?? '',
       photoUrl: json['photoUrl'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      pushNotificationsEnabled:
+          json['pushNotificationsEnabled'] as bool? ?? true,
+      createdAt: _readDateTime(json['createdAt']),
+      lastSeen: _readDateTime(json['lastSeen']),
+      isOnline: json['isOnline'] as bool? ?? false,
     );
   }
 
+  /// Champs profil éditables / affichés. Merge Firestore : ne pas écraser
+  /// les champs présence gérés ailleurs (`isOnline`, `lastSeen`, …).
   Map<String, dynamic> toJson() {
     return {
       'uid': id,
@@ -50,6 +63,18 @@ class ProfileModel extends ProfileEntity {
       'email': email,
       'bio': bio,
       'photoUrl': photoUrl,
+      'title': title,
+      'pushNotificationsEnabled': pushNotificationsEnabled,
     };
+  }
+
+  static DateTime? _readDateTime(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    return null;
   }
 }

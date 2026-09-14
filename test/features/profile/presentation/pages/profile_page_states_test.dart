@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
+import 'package:devcommunitychat/core/theme/theme_mode_controller.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
@@ -17,13 +20,42 @@ const _user = AppUser(
   displayName: 'Alexandre',
 );
 
+Future<SharedPreferences> _prefs({String? themeMode}) async {
+  SharedPreferences.setMockInitialValues({
+    if (themeMode != null) 'app_theme_mode': themeMode,
+  });
+  return SharedPreferences.getInstance();
+}
+
 Future<void> _pumpProfilePage(
-  WidgetTester tester,
-  Stream<AppUser?> authStream,
-) {
-  return tester.pumpWidget(
+  WidgetTester tester, {
+  required Stream<AppUser?> authStream,
+  FakeProfileRepository? repository,
+  String? themeMode,
+}) async {
+  final prefs = await _prefs(themeMode: themeMode);
+  final fake = repository ??
+      FakeProfileRepository(
+        profile: ProfileEntity(
+          id: 'user-123',
+          displayname: 'Alexandre',
+          email: 'alex@example.com',
+          bio: 'Bio de test',
+          photoUrl: '',
+          title: 'Flutter Dev',
+          createdAt: DateTime(2024, 3, 1),
+          isOnline: true,
+        ),
+      );
+
+  await tester.pumpWidget(
     ProviderScope(
-      overrides: [authStateProvider.overrideWith((ref) => authStream)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        authStateProvider.overrideWith((ref) => authStream),
+        profileRepositoryProvider.overrideWithValue(fake),
+        profileSalonCountProvider.overrideWith((ref) => const AsyncData(3)),
+      ],
       child: const MaterialApp(
         home: ProfilePage(avatarImage: AssetImage('assets/images/dev.png')),
       ),
@@ -36,7 +68,7 @@ void main() {
     testWidgets(
       'affiche un loader tant que la session est en cours de chargement',
       (tester) async {
-        await _pumpProfilePage(tester, const Stream.empty());
+        await _pumpProfilePage(tester, authStream: const Stream.empty());
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -46,7 +78,7 @@ void main() {
     testWidgets('affiche un message si aucun utilisateur n\'est connecté', (
       tester,
     ) async {
-      await _pumpProfilePage(tester, Stream.value(null));
+      await _pumpProfilePage(tester, authStream: Stream.value(null));
       await tester.pump();
 
       expect(find.text('Aucun utilisateur connecté'), findsOneWidget);
@@ -55,7 +87,10 @@ void main() {
     testWidgets(
       'affiche un message d\'erreur si le flux authStateProvider échoue',
       (tester) async {
-        await _pumpProfilePage(tester, Stream<AppUser?>.error('Erreur réseau'));
+        await _pumpProfilePage(
+          tester,
+          authStream: Stream<AppUser?>.error('Erreur réseau'),
+        );
         await tester.pumpAndSettle();
 
         expect(find.textContaining('Erreur'), findsOneWidget);
@@ -63,63 +98,80 @@ void main() {
     );
   });
 
-  group('ProfilePage - interactions', () {
-    testWidgets('changer de thème met à jour la sélection visuelle', (
+  group('ProfilePage - données réelles', () {
+    testWidgets('affiche bio, titre et stats issus du profil / chats', (
       tester,
     ) async {
-      await _pumpProfilePage(tester, Stream.value(_user));
-      await tester.pump();
+      await _pumpProfilePage(tester, authStream: Stream.value(_user));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Alexandre'), findsOneWidget);
+      expect(find.text('Bio de test'), findsOneWidget);
+      expect(find.textContaining('Flutter Dev'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('Salons'), findsOneWidget);
+      expect(find.text('En ligne'), findsOneWidget);
+      expect(find.textContaining('mars 2024'), findsOneWidget);
+    });
+  });
+
+  group('ProfilePage - interactions', () {
+    testWidgets('changer de thème met à jour la sélection et le provider', (
+      tester,
+    ) async {
+      await _pumpProfilePage(
+        tester,
+        authStream: Stream.value(_user),
+        themeMode: 'dark',
+      );
+      await tester.pumpAndSettle();
 
       ProfileThemeOption optionFor(String title) =>
           tester.widget(find.widgetWithText(ProfileThemeOption, title));
 
       expect(optionFor('Sombre').isSelected, isTrue);
-
       expect(optionFor('Clair').isSelected, isFalse);
 
       await tester.ensureVisible(find.text('Clair'));
-
       await tester.tap(find.text('Clair'));
-
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(optionFor('Clair').isSelected, isTrue);
-
       expect(optionFor('Sombre').isSelected, isFalse);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ProfilePage)),
+      );
+      expect(container.read(themeModeProvider), ThemeMode.light);
     });
 
     testWidgets('ouvre la boîte de dialogue d\'édition pré-remplie', (
       tester,
     ) async {
-      await _pumpProfilePage(tester, Stream.value(_user));
-      await tester.pump();
-
-      await tester.ensureVisible(find.text('Modifier mon profil'));
-
-      await tester.tap(find.text('Modifier mon profil'));
-
+      await _pumpProfilePage(tester, authStream: Stream.value(_user));
       await tester.pumpAndSettle();
 
-      expect(find.text('Modifier mon profil'), findsWidgets);
+      await tester.ensureVisible(find.text('Modifier mon profil'));
+      await tester.tap(find.text('Modifier mon profil'));
+      await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-
       expect(textFields, findsNWidgets(3));
-
       expect(
         tester.widget<TextField>(textFields.at(0)).controller?.text,
         'Alexandre',
       );
-
       expect(
         tester.widget<TextField>(textFields.at(1)).controller?.text,
-        'alex@example.com',
+        'Flutter Dev',
+      );
+      expect(
+        tester.widget<TextField>(textFields.at(2)).controller?.text,
+        'Bio de test',
       );
 
       await tester.tap(find.text('Annuler'));
-
       await tester.pumpAndSettle();
-
       expect(find.byType(AlertDialog), findsNothing);
     });
   });
@@ -135,76 +187,40 @@ void main() {
           email: 'alex@example.com',
           bio: 'Ancienne bio',
           photoUrl: '',
+          title: 'Ancien titre',
         ),
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authStateProvider.overrideWith((ref) => Stream.value(_user)),
-            profileRepositoryProvider.overrideWithValue(fakeRepository),
-          ],
-          child: const MaterialApp(
-            home: ProfilePage(avatarImage: AssetImage('assets/images/dev.png')),
-          ),
-        ),
+      await _pumpProfilePage(
+        tester,
+        authStream: Stream.value(_user),
+        repository: fakeRepository,
       );
-
-      await tester.pump();
-
-      // Ouvrir la boîte de dialogue.
-      await tester.ensureVisible(find.text('Modifier mon profil'));
-
-      await tester.tap(find.text('Modifier mon profil'));
-
       await tester.pumpAndSettle();
 
-      // Le dialogue contient exactement 3 champs :
-      // 0 = Nom
-      // 1 = Email
-      // 2 = Bio
-      final textFields = find.byType(TextField);
+      await tester.ensureVisible(find.text('Modifier mon profil'));
+      await tester.tap(find.text('Modifier mon profil'));
+      await tester.pumpAndSettle();
 
+      final textFields = find.byType(TextField);
       expect(textFields, findsNWidgets(3));
 
-      // Modifier le nom.
       await tester.enterText(textFields.at(0), 'Jean Dupont');
-
-      // Modifier l'email.
-      await tester.enterText(textFields.at(1), 'jean@example.com');
-
-      // Modifier la bio.
+      await tester.enterText(textFields.at(1), 'Staff Engineer');
       await tester.enterText(textFields.at(2), 'Développeur Flutter passionné');
 
-      // Enregistrer.
       await tester.tap(find.text('Enregistrer'));
-
       await tester.pumpAndSettle();
 
-      // Vérifie que updateProfile a bien été appelé.
       expect(fakeRepository.updateProfileCallCount, 1);
-
-      // Vérifie l'utilisateur ciblé.
       expect(fakeRepository.lastUserId, 'user-123');
-
-      // Vérifie les données envoyées.
       expect(fakeRepository.lastName, 'Jean Dupont');
-
-      expect(fakeRepository.lastEmail, 'jean@example.com');
-
+      expect(fakeRepository.lastTitle, 'Staff Engineer');
       expect(fakeRepository.lastBio, 'Développeur Flutter passionné');
-
-      // Vérifie que le profil a été mis à jour.
       expect(fakeRepository.profile?.displayname, 'Jean Dupont');
-
-      expect(fakeRepository.profile?.email, 'jean@example.com');
-
+      expect(fakeRepository.profile?.title, 'Staff Engineer');
       expect(fakeRepository.profile?.bio, 'Développeur Flutter passionné');
-
-      // Vérifie que la boîte de dialogue est fermée.
       expect(find.byType(AlertDialog), findsNothing);
-
-      // Vérifie le message de confirmation.
       expect(find.text('Profil mis à jour.'), findsOneWidget);
     });
   });

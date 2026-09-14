@@ -3,12 +3,15 @@ import 'package:devcommunitychat/features/profile/domain/repositories/profile_re
 
 class FakeProfileRepository implements ProfileRepository {
   ProfileEntity? profile;
-  
+
   int updateProfileCallCount = 0;
+  int updatePushCallCount = 0;
   String? lastUserId;
   String? lastName;
   String? lastEmail;
   String? lastBio;
+  String? lastTitle;
+  bool? lastPushEnabled;
 
   FakeProfileRepository({this.profile});
 
@@ -18,18 +21,25 @@ class FakeProfileRepository implements ProfileRepository {
   }
 
   @override
+  Stream<ProfileEntity?> watchProfile(String userId) {
+    return Stream.value(profile);
+  }
+
+  @override
   Future<ProfileEntity> updateProfile({
     required String userId,
     required String name,
     String? photoUrl,
     String? email,
     String? bio,
+    String? title,
   }) async {
     updateProfileCallCount++;
     lastUserId = userId;
     lastName = name;
     lastEmail = email;
     lastBio = bio;
+    lastTitle = title;
 
     profile = ProfileEntity(
       id: userId,
@@ -37,9 +47,27 @@ class FakeProfileRepository implements ProfileRepository {
       photoUrl: photoUrl ?? profile?.photoUrl ?? '',
       email: email ?? profile?.email ?? '',
       bio: bio ?? profile?.bio ?? '',
+      title: title ?? profile?.title ?? '',
+      pushNotificationsEnabled: profile?.pushNotificationsEnabled ?? true,
+      createdAt: profile?.createdAt,
+      lastSeen: profile?.lastSeen,
+      isOnline: profile?.isOnline ?? false,
     );
-    
+
     return profile!;
+  }
+
+  @override
+  Future<void> updatePushNotifications({
+    required String userId,
+    required bool enabled,
+  }) async {
+    updatePushCallCount++;
+    lastUserId = userId;
+    lastPushEnabled = enabled;
+    if (profile != null) {
+      profile = profile!.copyWith(pushNotificationsEnabled: enabled);
+    }
   }
 
   @override
