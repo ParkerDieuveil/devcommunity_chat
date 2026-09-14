@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_route_path.dart';
 import '../providers/auth_controller.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import 'home_content.dart';
-import '../providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -16,7 +13,6 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final actionState = ref.watch(authControllerProvider);
-    final user = ref.watch(currentUserProvider);
 
     final selectedTab = ref.watch(mainTabProvider);
     final selectedIndex = selectedTab.index;
@@ -46,13 +42,13 @@ class HomePage extends ConsumerWidget {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.chat_outlined),
-            selectedIcon: Icon(Icons.chat),
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(Icons.chat_outlined),
+            selectedIcon: Icon(Icons.chat),
             label: 'Chat',
           ),
           NavigationDestination(
