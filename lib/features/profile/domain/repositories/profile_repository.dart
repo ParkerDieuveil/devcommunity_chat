@@ -22,4 +22,9 @@ abstract interface class ProfileRepository {
     required String userId,
     required bool enabled,
   });
+
+  Future<ProfileEntity> updatePhotoUrl({
+    required String userId,
+    required String photoUrl,
+  });
 }

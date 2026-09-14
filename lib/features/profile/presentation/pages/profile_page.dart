@@ -7,6 +7,7 @@ import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/profile.dart';
+import '../../domain/services/avatar_image_source.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_icon_container.dart';
 import '../widgets/profile_liste_tile.dart';
@@ -123,9 +124,10 @@ class _ProfileBody extends ConsumerWidget {
             Center(
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundImage: imageProvider,
+                  _ProfileAvatar(
+                    imageProvider: imageProvider,
+                    isUploading: ref.watch(profileAvatarControllerProvider).isLoading,
+                    onTap: () => _onChangeAvatar(context, ref),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -479,6 +481,65 @@ class _ProfileBody extends ConsumerWidget {
     }
   }
 
+  Future<void> _onChangeAvatar(BuildContext context, WidgetRef ref) async {
+    final source = await showModalBottomSheet<AvatarPickSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choisir depuis la galerie'),
+                onTap: () => Navigator.pop(
+                  sheetContext,
+                  AvatarPickSource.gallery,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Prendre une photo'),
+                onTap: () => Navigator.pop(
+                  sheetContext,
+                  AvatarPickSource.camera,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: const Text('Annuler'),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null || !context.mounted) return;
+
+    final changed = await ref
+        .read(profileAvatarControllerProvider.notifier)
+        .changeAvatar(source);
+
+    if (!context.mounted) return;
+
+    final state = ref.read(profileAvatarControllerProvider);
+    if (state.hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${state.error}')),
+      );
+      return;
+    }
+
+    if (changed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Photo de profil mise à jour.')),
+      );
+    }
+  }
+
   Future<void> _showEditProfileDialog(
     BuildContext context, {
     required AppUser user,
@@ -507,6 +568,81 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: child,
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  final ImageProvider<Object> imageProvider;
+  final bool isUploading;
+  final VoidCallback onTap;
+
+  const _ProfileAvatar({
+    required this.imageProvider,
+    required this.isUploading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: isUploading ? null : onTap,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 104,
+            height: 104,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.primary, width: 2),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: CircleAvatar(
+                radius: 48,
+                backgroundImage: imageProvider,
+              ),
+            ),
+          ),
+          if (isUploading)
+            Container(
+              width: 104,
+              height: 104,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.scrim.withValues(alpha: 0.45),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              ),
+            )
+          else
+            Positioned(
+              right: 4,
+              bottom: 4,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.outlineVariant),
+                ),
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                  size: 16,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
