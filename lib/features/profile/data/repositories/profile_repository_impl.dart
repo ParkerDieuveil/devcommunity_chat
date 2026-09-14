@@ -72,4 +72,25 @@ class ProfileRepositoryImpl implements ProfileRepository {
       'pushNotificationsEnabled': enabled,
     });
   }
+
+  @override
+  Future<ProfileEntity> updatePhotoUrl({
+    required String userId,
+    required String photoUrl,
+  }) async {
+    await datasource.updateProfile(userId, {'photoUrl': photoUrl});
+
+    final existing = await getProfile(userId);
+    if (existing != null) {
+      return existing;
+    }
+
+    return ProfileModel(
+      id: userId,
+      displayname: '',
+      email: '',
+      bio: '',
+      photoUrl: photoUrl,
+    );
+  }
 }

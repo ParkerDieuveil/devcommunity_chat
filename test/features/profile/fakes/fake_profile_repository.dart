@@ -71,6 +71,24 @@ class FakeProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<ProfileEntity> updatePhotoUrl({
+    required String userId,
+    required String photoUrl,
+  }) async {
+    lastUserId = userId;
+    profile = (profile ??
+            ProfileEntity(
+              id: userId,
+              displayname: '',
+              email: '',
+              bio: '',
+              photoUrl: '',
+            ))
+        .copyWith(photoUrl: photoUrl);
+    return profile!;
+  }
+
+  @override
   Future<void> saveProfile(ProfileEntity profile) async {
     this.profile = profile;
   }
