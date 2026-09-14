@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DevCommunity a besoin de ta galerie pour envoyer des images dans le chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DevCommunity a besoin de la caméra pour envoyer des photos dans le chat.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>DevCommunity peut enregistrer des images liées au chat.</string>
 </dict>
 </plist>
