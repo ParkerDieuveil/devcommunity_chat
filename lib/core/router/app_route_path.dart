@@ -7,7 +7,6 @@ class AppRoutePath {
   static const String profilePath = "/profile";
 
   // Chat
-  static const String chatPath = "/chat";
   static const String chatsPath = "/chats";
   static const String newChatPath = "/new-chat";
   static const String chatDetailPath = "/chats/:chatId";
