@@ -9,16 +9,16 @@ Légende : ✅ testé et fonctionnel · ⏳ pas encore implémenté sur `develop
 | Démarrage de l'application | ✅ | L'app démarre sur `LoginPage` sans utilisateur connecté (`test/widget_test.dart`) |
 | Inscription | ✅ | `RegisterPage` : rendu + validations testées. Appel réel à Firebase Auth non testé (pas de mocks en place) |
 | Connexion | ✅ | `LoginPage` : rendu + validations testées. Appel réel à Firebase Auth non testé |
-| Déconnexion | ⏳ | Bouton présent sur `HomePage` et `ProfilePage` (`AuthController.logout()`), mais aucun test automatisé dessus |
-| Navigation | ✅ | Redirection selon l'état d'auth (`routerProvider`) + navigation par onglets Home/Chat/Profil testée (`test/features/auth/presentation/pages/home_page_navigation_test.dart`) ; routes couvertes unitairement |
-| Affichage du profil | ✅ | `ProfilePage` : affichage des données utilisateur, état "aucun utilisateur", état de chargement, état d'erreur, sélecteur de thème, ouverture/pré-remplissage de la boîte de dialogue d'édition — tous testés |
+| Déconnexion | ✅ | `AuthController.logout()` testé unitairement (succès + erreur) et via le tap du bouton sur `HomePage`/`ProfilePage`, avec un `FakeAuthRepository` |
+| Navigation | ✅ | Redirection selon l'état d'auth (`routerProvider`) + navigation par onglets Home/Chat/Profil testée ; routes couvertes unitairement |
+| Affichage du profil | ✅ | `ProfilePage` : affichage des données, état "aucun utilisateur", chargement, erreur, sélecteur de thème, boîte de dialogue d'édition — tous testés |
 | Modification du profil | ⏳ | La boîte de dialogue s'ouvre et se pré-remplit (testé), mais l'enregistrement effectif (`UpdateProfile` → Firestore) n'est pas testé |
-| Affichage du Chat | ⏳ | `ChatsPage`, `ChatMessagesPage` (Firestore) sans test. Le tab "Chat" de la navigation principale (`ChatPage`) utilise un `ChatNotifier` local en mémoire, pas la vraie implémentation Firestore — voir `BUG_REPORT.md` |
-| Envoi d'un message | ⏳ | `MessageComposer` et `SendMessageUseCase` (Firestore) existent mais aucun test automatisé |
-| Réception temps réel | ⏳ | Couche Firestore (`ChatRepositoryImpl`, `watchMessagesUseCase`) en place mais aucun test automatisé (nécessite mocks Firestore) |
+| Affichage du Chat | ✅ | `ChatsPage` (liste de conversations, état vide, réception temps réel) et `ChatMessagesPage` (liste de messages, état vide) testés avec un `FakeChatRepository`. Le tab "Chat" de la navigation principale (`ChatPage`) utilise toujours un `ChatNotifier` local en mémoire, pas la vraie implémentation Firestore — voir `BUG_REPORT.md` |
+| Envoi d'un message | ✅ | `SendMessageUseCase` testé unitairement (succès + erreur) ; `ChatMessagesPage` testé de bout en bout (saisie → tap envoi → appel repository → champ vidé, et cas d'erreur affiché) ; `MessageComposer` testé isolément |
+| Réception temps réel | ✅ | `WatchMessagesUseCase` et `ChatsPage`/`ChatMessagesPage` testés avec un flux Firestore simulé (`FakeChatRepository`, plusieurs émissions successives) |
 | Composant `MessageBubble` | ✅ | Rendu testé : message reçu/envoyé, avatar/initiale, icône de lecture |
-| États loading/error/empty | ✅ (partiel) | Couverts pour `LoginPage`/`RegisterPage` (validations) et `ProfilePage` (loading/error/empty) ; pas encore pour le chat |
+| États loading/error/empty | ✅ | Couverts pour `LoginPage`/`RegisterPage`, `ProfilePage`, `ChatsPage` et `ChatMessagesPage` |
 
 ## Résumé
 
-Les parcours d'authentification, de navigation principale et d'affichage du profil sont désormais couverts par des tests automatisés, ainsi que le composant `MessageBubble`. Restent à couvrir : la déconnexion, l'enregistrement réel des modifications de profil, et tout le chat Firestore (liste de conversations, envoi, réception temps réel) — cela nécessite l'introduction d'une librairie de mocks (ex. `mocktail`) pour isoler les tests de Firebase/Firestore.
+L'ensemble des fonctionnalités MVP demandées par l'Issue #8 (auth, déconnexion, navigation, profil, chat, envoi de message, réception temps réel) sont désormais couvertes par des tests automatisés, en utilisant des fakes en mémoire (`FakeAuthRepository`, `FakeChatRepository`) pour isoler les tests de Firebase/Firestore sans dépendance supplémentaire. Reste à couvrir : l'enregistrement effectif des modifications de profil, et le branchement du tab "Chat" de la navigation principale sur la vraie implémentation Firestore (actuellement un chat local en mémoire, voir `BUG_REPORT.md`).
