@@ -5,6 +5,10 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
     function isChatParticipant(chatId) {
       return isSignedIn()
         && request.auth.uid in firestore.get(
@@ -23,13 +27,10 @@ service firebase.storage {
       allow delete: if isChatParticipant(chatId);
     }
 
-    // Compat avatar profil (si feature avatar déjà / bientôt déployée).
     match /users/{userId}/avatar/{fileName} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && request.auth.uid == userId
-        && isValidImage();
-      allow delete: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
     }
   }
 }
