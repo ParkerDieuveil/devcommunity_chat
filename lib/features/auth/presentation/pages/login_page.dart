@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/locale/app_strings.dart';
 import '../providers/auth_controller.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -39,6 +40,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (!mounted) return;
 
     final authState = ref.read(authControllerProvider);
+    final s = ref.read(appStringsProvider);
 
     authState.whenOrNull(
       data: (user) {
@@ -49,7 +51,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       error: (error, _) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_getErrorMessage(error)),
+            content: Text(_getErrorMessage(error, s)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -57,34 +59,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  String _getErrorMessage(Object error) {
+  String _getErrorMessage(Object error, AppStrings s) {
     final message = error.toString().toLowerCase();
 
     if (message.contains('user-not-found')) {
-      return 'Aucun compte associé à cet email.';
+      return s.authUserNotFound;
     }
 
     if (message.contains('wrong-password') ||
         message.contains('invalid-credential')) {
-      return 'Email ou mot de passe incorrect.';
+      return s.authWrongCredentials;
     }
 
     if (message.contains('invalid-email')) {
-      return 'Veuillez entrer une adresse email valide.';
+      return s.invalidEmail;
     }
 
     if (message.contains('too-many-requests')) {
-      return 'Trop de tentatives. Réessayez plus tard.';
+      return s.authTooManyRequests;
     }
 
-    return 'Une erreur est survenue. Veuillez réessayer.';
+    return s.authGenericError;
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, AppStrings s) {
     final email = value?.trim() ?? '';
 
     if (email.isEmpty) {
-      return 'Veuillez entrer votre email.';
+      return s.emailRequired;
     }
 
     final emailRegex = RegExp(
@@ -92,15 +94,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
 
     if (!emailRegex.hasMatch(email)) {
-      return 'Veuillez entrer une adresse email valide.';
+      return s.invalidEmail;
     }
 
     return null;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, AppStrings s) {
     if (value == null || value.isEmpty) {
-      return 'Veuillez entrer votre mot de passe.';
+      return s.passwordRequired;
     }
 
     return null;
@@ -109,6 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final s = ref.watch(appStringsProvider);
     final isLoading = authState.isLoading;
 
     return Scaffold(
@@ -126,8 +129,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo
-                    // Logo DevCommunity Chat
                     Center(
                       child: Image.asset(
                         'assets/images/dev.png',
@@ -136,42 +137,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         fit: BoxFit.contain,
                       ),
                     ),
-
-
-
-                    const SizedBox(height: 8),
-
+                    const SizedBox(height: 16),
                     Text(
-                      'Connectez-vous à votre communauté.',
+                      s.appName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      s.loginSubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 15,
                       ),
                     ),
-
                     const SizedBox(height: 40),
-
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autocorrect: false,
                       decoration: InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'vous@example.com',
+                        labelText: s.email,
+                        hintText: s.emailHint,
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: _validateEmail,
+                      validator: (v) => _validateEmail(v, s),
                     ),
-
                     const SizedBox(height: 18),
-
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -180,12 +180,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         if (!isLoading) _login();
                       },
                       decoration: InputDecoration(
-                        labelText: 'Mot de passe',
+                        labelText: s.password,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip: _obscurePassword
-                              ? 'Afficher le mot de passe'
-                              : 'Masquer le mot de passe',
+                              ? s.showPassword
+                              : s.hidePassword,
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_outlined
@@ -201,11 +201,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: _validatePassword,
+                      validator: (v) => _validatePassword(v, s),
                     ),
-
                     const SizedBox(height: 28),
-
                     SizedBox(
                       height: 54,
                       child: FilledButton(
@@ -223,37 +221,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : const Text(
-                                'Se connecter',
-                                style: TextStyle(
+                            : Text(
+                                s.signIn,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          'Pas encore de compte ? ',
+                          s.noAccountYet,
                           style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         TextButton(
                           onPressed: isLoading
                               ? null
                               : () => context.go('/register'),
-                          child: const Text(
-                            'Créer un compte',
-                            style: TextStyle(
+                          child: Text(
+                            s.createAccount,
+                            style: const TextStyle(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
