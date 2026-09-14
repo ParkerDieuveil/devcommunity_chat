@@ -13,15 +13,29 @@ class ThemeModeController extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
     final raw = ref.read(sharedPreferencesProvider).getString(_storageKey);
-    return _decode(raw) ?? ThemeMode.dark;
+    final decoded = _decode(raw) ?? ThemeMode.dark;
+    // Ancien choix « Système » : on le fige selon l’appareil (souvent clair
+    // sur émulateur — d’où l’impression de bug).
+    if (decoded == ThemeMode.system) {
+      final brightness =
+          WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      return brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+    }
+    return decoded;
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    if (state == mode) return;
-    state = mode;
+    final resolved = mode == ThemeMode.system
+        ? (WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                Brightness.dark
+            ? ThemeMode.dark
+            : ThemeMode.light)
+        : mode;
+    if (state == resolved) return;
+    state = resolved;
     await ref.read(sharedPreferencesProvider).setString(
           _storageKey,
-          _encode(mode),
+          _encode(resolved),
         );
   }
 

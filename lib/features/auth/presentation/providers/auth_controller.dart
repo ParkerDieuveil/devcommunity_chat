@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../chat/domain/exceptions/chat_exceptions.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
+import '../../../../core/router/navigation_provider.dart';
 import '../../domain/entities/app_user.dart';
 import 'auth_provider.dart';
 
@@ -90,7 +91,8 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
 
     try {
       await ref.read(logoutUseCaseProvider).call();
-
+      // Prochaine session repart sur l’onglet Chat, pas More/Profile.
+      ref.read(mainTabProvider.notifier).selectTab(MainTab.chat);
       state = const AsyncData(null);
     } on FirebaseAuthException catch (error, stackTrace) {
       state = AsyncError(
