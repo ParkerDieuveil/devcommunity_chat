@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isChatParticipant(chatId) {
+      return isSignedIn()
+        && request.auth.uid in firestore.get(
+             /databases/(default)/documents/chats/$(chatId)
+           ).data.participantIds;
+    }
+
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /chats/{chatId}/images/{fileName} {
+      allow read: if isChatParticipant(chatId);
+      allow create, update: if isChatParticipant(chatId) && isValidImage();
+      allow delete: if isChatParticipant(chatId);
+    }
+
+    // Compat avatar profil (si feature avatar déjà / bientôt déployée).
+    match /users/{userId}/avatar/{fileName} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == userId
+        && isValidImage();
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}
