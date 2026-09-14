@@ -52,8 +52,8 @@ void main() {
       await tester.tap(find.text('Chat'));
       await tester.pump();
 
-      expect(find.text('DevCommunity Chat'), findsWidgets);
-      expect(find.text('0 message(s)'), findsOneWidget);
+      expect(find.text('Conversations'), findsOneWidget);
+      expect(find.byTooltip('Nouveau chat (outil de test)'), findsOneWidget);
     });
 
     testWidgets('bascule vers l\'onglet Profil au tap', (tester) async {

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_controller.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
-import '../../../chat/presentation/pages/chat_page.dart';
+import '../../../chat/presentation/pages/chats_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import 'home_content.dart';
 
@@ -17,7 +17,7 @@ class HomePage extends ConsumerWidget {
     final selectedTab = ref.watch(mainTabProvider);
     final selectedIndex = selectedTab.index;
 
-    const pages = [HomeContent(), ChatPage(), ProfilePage()];
+    const pages = [HomeContent(), ChatsPage(), ProfilePage()];
 
     return Scaffold(
       appBar: AppBar(
