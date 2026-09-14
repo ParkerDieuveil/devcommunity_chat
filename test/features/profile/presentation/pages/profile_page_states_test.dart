@@ -22,7 +22,7 @@ const _user = AppUser(
 
 Future<SharedPreferences> _prefs({String? themeMode}) async {
   SharedPreferences.setMockInitialValues({
-    if (themeMode != null) 'app_theme_mode': themeMode,
+    'app_theme_mode': ?themeMode,
   });
   return SharedPreferences.getInstance();
 }

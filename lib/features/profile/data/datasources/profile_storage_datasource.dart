@@ -29,7 +29,7 @@ class ProfileStorageDatasource {
           cacheControl: 'public,max-age=3600',
         ),
       );
-      return ref.getDownloadURL();
+      return await ref.getDownloadURL();
     } on FirebaseException catch (error) {
       throw AvatarUploadException(
         error.message ?? 'Échec de l’upload de l’avatar.',
