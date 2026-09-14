@@ -16,6 +16,10 @@ void main() {
       await pumpLoginPage(tester);
 
       expect(find.byType(Image), findsOneWidget);
+      expect(
+        find.text('Connectez-vous à votre communauté.'),
+        findsOneWidget,
+      );
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Mot de passe'), findsOneWidget);
       expect(find.text('Se connecter'), findsOneWidget);
