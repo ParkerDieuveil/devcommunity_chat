@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../domain/usecases/get_chat_use_case.dart';
 import '../../data/datasources/chat_remote_data_source.dart';
 import '../../data/datasources/user_profile_remote_data_source.dart';
 import '../../domain/entities/chat_entity.dart';
@@ -14,7 +14,7 @@ import '../../domain/usecases/send_message_use_case.dart';
 import '../../domain/usecases/sync_user_profile_use_case.dart';
 import '../../domain/usecases/watch_messages_use_case.dart';
 import '../../domain/usecases/watch_user_chats_use_case.dart';
-
+import '../../domain/usecases/mark_messages_as_read_use_case.dart';
 /// Infra Firestore (datasources uniquement).
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
@@ -25,7 +25,22 @@ final chatRemoteDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
     firestore: ref.watch(firestoreProvider),
   );
 });
+final getChatUseCaseProvider = Provider<GetChatUseCase>((ref) {
+  return GetChatUseCase(
+    ref.watch(chatRepositoryProvider),
+  );
+});
+final chatByIdProvider =
+FutureProvider.family<ChatEntity?, String>((ref, chatId) {
+  return ref.watch(getChatUseCaseProvider).call(chatId);
+});
 
+final markMessagesAsReadUseCaseProvider =
+Provider<MarkMessagesAsReadUseCase>((ref) {
+  return MarkMessagesAsReadUseCase(
+    ref.watch(chatRepositoryProvider),
+  );
+});
 final userProfileRemoteDataSourceProvider =
     Provider<UserProfileRemoteDataSource>((ref) {
   return UserProfileRemoteDataSourceImpl(

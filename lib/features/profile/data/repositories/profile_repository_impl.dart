@@ -20,6 +20,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Stream<List<ProfileEntity>> watchProfiles() {
+    return datasource.watchProfiles();
+  }
+
+  @override
   Future<void> saveProfile(ProfileEntity profile) {
     final model = ProfileModel.fromEntity(profile);
 

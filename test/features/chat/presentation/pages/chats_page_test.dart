@@ -7,10 +7,15 @@ import 'package:devcommunitychat/features/auth/presentation/providers/auth_provi
 import 'package:devcommunitychat/features/chat/domain/entities/chat_entity.dart';
 import 'package:devcommunitychat/features/chat/presentation/pages/chats_page.dart';
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
+import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
+import 'package:devcommunitychat/features/profile/presentation/providers/profile_provider.dart';
 
 import '../../fakes/fake_chat_repository.dart';
 
-const _user = AppUser(id: 'user-1', email: 'user@example.com');
+const _user = AppUser(
+  id: 'user-1',
+  email: 'user@example.com',
+);
 
 void main() {
   group('ChatsPage', () {
@@ -24,45 +29,80 @@ void main() {
       return tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authStateProvider.overrideWith((ref) => Stream.value(_user)),
-            chatRepositoryProvider.overrideWithValue(fakeRepository),
+            authStateProvider.overrideWith(
+                  (ref) => Stream.value(_user),
+            ),
+            chatRepositoryProvider.overrideWithValue(
+              fakeRepository,
+            ),
+            profilesProvider.overrideWith(
+                  (ref) => Stream.value([
+                ProfileEntity(
+                  id: 'user-2',
+                  displayname: 'Jean Dupont',
+                  email: 'jean@example.com',
+                  bio: '',
+                  photoUrl: '',
+                ),
+              ]),
+            ),
           ],
-          child: const MaterialApp(home: ChatsPage()),
+          child: const MaterialApp(
+            home: ChatsPage(),
+          ),
         ),
       );
     }
 
-    testWidgets('affiche "Aucune conversation" si la liste est vide', (
-      tester,
-    ) async {
-      await pumpPage(tester);
-      await tester.pump(); // laisse authStateProvider résoudre l'utilisateur
-      fakeRepository.emitChats([]);
-      await tester.pump();
+    testWidgets(
+      'affiche "Aucune conversation" si la liste est vide',
+          (tester) async {
+        await pumpPage(tester);
+        await tester.pump();
 
-      expect(find.text('Aucune conversation'), findsOneWidget);
-    });
+        fakeRepository.emitChats([]);
+        await tester.pump();
 
-    testWidgets('affiche les conversations reçues en temps réel', (
-      tester,
-    ) async {
-      await pumpPage(tester);
-      await tester.pump(); // laisse authStateProvider résoudre l'utilisateur
-      fakeRepository.emitChats([]);
-      await tester.pump();
+        expect(
+          find.text('Aucune conversation'),
+          findsOneWidget,
+        );
+      },
+    );
 
-      fakeRepository.emitChats([
-        ChatEntity(
-          chatId: 'chat-1',
-          participantIds: const ['user-1', 'user-2'],
-          lastMessage: 'A demain !',
-          createdAt: DateTime(2026, 1, 1),
-        ),
-      ]);
-      await tester.pump();
+    testWidgets(
+      'affiche les conversations reçues en temps réel',
+          (tester) async {
+        await pumpPage(tester);
+        await tester.pump();
 
-      expect(find.text('user-2'), findsOneWidget);
-      expect(find.text('A demain !'), findsOneWidget);
-    });
+        fakeRepository.emitChats([]);
+        await tester.pump();
+
+        fakeRepository.emitChats([
+          ChatEntity(
+            chatId: 'chat-1',
+            participantIds: const [
+              'user-1',
+              'user-2',
+            ],
+            lastMessage: 'A demain !',
+            createdAt: DateTime(2026, 1, 1),
+          ),
+        ]);
+
+        await tester.pump();
+
+        expect(
+          find.text('Jean Dupont'),
+          findsOneWidget,
+        );
+
+        expect(
+          find.text('A demain !'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

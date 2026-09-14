@@ -8,6 +8,7 @@ class MessageEntity {
   final String? imageUrl;
   final MessageType type;
   final DateTime timestamp;
+  final DateTime? readAt;
 
   const MessageEntity({
     required this.messageId,
@@ -17,5 +18,8 @@ class MessageEntity {
     this.imageUrl,
     required this.type,
     required this.timestamp,
+    this.readAt,
   });
+
+  bool get isRead => readAt != null;
 }

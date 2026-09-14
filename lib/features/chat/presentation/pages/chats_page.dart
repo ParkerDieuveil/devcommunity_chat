@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_route_path.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/domain/entities/profile.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../providers/chat_provider.dart';
 
@@ -16,25 +18,32 @@ class ChatsPage extends ConsumerWidget {
 
     if (user == null) {
       return const Scaffold(
-        body: Center(child: Text('Session requise')),
+        body: Center(
+          child: Text('Session requise'),
+        ),
       );
     }
 
     final chatsAsync = ref.watch(userChatsProvider(user.id));
+    final profilesAsync = ref.watch(profilesProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conversations'),
         actions: [
           IconButton(
-            tooltip: 'Nouveau chat (outil de test)',
-            onPressed: () => _openNewChatTestDialog(context, ref, user.id),
+            tooltip: 'Nouveau chat',
+            onPressed: () {
+              context.push(AppRoutePath.newChatPath);
+            },
             icon: const Icon(Icons.add),
           ),
         ],
       ),
       body: chatsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -51,12 +60,41 @@ class ChatsPage extends ConsumerWidget {
             );
           }
 
-          return ListView.separated(
-            itemCount: chats.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              return _ChatTile(chat: chat, currentUserId: user.id);
+          return profilesAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Impossible de charger les profils.\n\n$error',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            data: (profiles) {
+              return ListView.separated(
+                itemCount: chats.length,
+                separatorBuilder: (context, index) {
+                  return const Divider(height: 1);
+                },
+                itemBuilder: (context, index) {
+                  final chat = chats[index];
+
+                  final otherProfile = _findOtherProfile(
+                    chat,
+                    user.id,
+                    profiles,
+                  );
+
+                  return _ChatTile(
+                    chat: chat,
+                    profile: otherProfile,
+                    currentUserId: user.id,
+                  );
+                },
+              );
             },
           );
         },
@@ -64,89 +102,106 @@ class ChatsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _openNewChatTestDialog(
-    BuildContext context,
-    WidgetRef ref,
-    String currentUserId,
-  ) async {
-    final controller = TextEditingController();
-
-    final otherUid = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Nouveau chat (test)'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Outil de test uniquement : colle le uid Firebase Auth du destinataire.',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'uid destinataire',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('Créer'),
-            ),
-          ],
-        );
-      },
+  ProfileEntity? _findOtherProfile(
+      ChatEntity chat,
+      String currentUserId,
+      List<ProfileEntity> profiles,
+      ) {
+    final otherUserIds = chat.participantIds.where(
+          (id) => id != currentUserId,
     );
 
-    controller.dispose();
-
-    if (otherUid == null || otherUid.isEmpty || !context.mounted) {
-      return;
+    for (final userId in otherUserIds) {
+      for (final profile in profiles) {
+        if (profile.id == userId) {
+          return profile;
+        }
+      }
     }
 
-    try {
-      final chatId = await ref.read(createChatUseCaseProvider).call([
-        currentUserId,
-        otherUid,
-      ]);
-      if (!context.mounted) return;
-      context.push(AppRoutePath.chatDetail(chatId));
-    } catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
-    }
+    return null;
   }
 }
 
 class _ChatTile extends StatelessWidget {
   const _ChatTile({
     required this.chat,
+    required this.profile,
     required this.currentUserId,
   });
 
   final ChatEntity chat;
+  final ProfileEntity? profile;
   final String currentUserId;
 
   @override
   Widget build(BuildContext context) {
-    final others = chat.participantIds
-        .where((id) => id != currentUserId)
-        .join(', ');
+    final displayName = _getDisplayName();
 
     return ListTile(
-      title: Text(others.isEmpty ? chat.chatId : others),
-      subtitle: Text(chat.lastMessage ?? 'Aucun message'),
-      onTap: () => context.push(AppRoutePath.chatDetail(chat.chatId)),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 6,
+      ),
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundImage: profile != null &&
+            profile!.photoUrl.trim().isNotEmpty
+            ? NetworkImage(profile!.photoUrl)
+            : null,
+        child: profile == null ||
+            profile!.photoUrl.trim().isEmpty
+            ? Text(
+          _getInitial(displayName),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        )
+            : null,
+      ),
+      title: Text(
+        displayName,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        chat.lastMessage ?? 'Aucun message',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () {
+        context.push(
+          AppRoutePath.chatDetail(chat.chatId),
+        );
+      },
     );
+  }
+
+  String _getDisplayName() {
+    if (profile != null) {
+      final name = profile!.displayname.trim();
+
+      if (name.isNotEmpty) {
+        return name;
+      }
+
+      final email = profile!.email.trim();
+
+      if (email.isNotEmpty) {
+        return email;
+      }
+    }
+
+    return 'Utilisateur';
+  }
+
+  String _getInitial(String name) {
+    final trimmed = name.trim();
+
+    if (trimmed.isEmpty) {
+      return '?';
+    }
+
+    return trimmed[0].toUpperCase();
   }
 }

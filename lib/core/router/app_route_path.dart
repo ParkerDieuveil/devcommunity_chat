@@ -6,14 +6,17 @@ class AppRoutePath {
   static const String registerPath = "/register";
   static const String profilePath = "/profile";
 
-  // Route du chat
+  // Chat
   static const String chatPath = "/chat";
   static const String chatsPath = "/chats";
+  static const String newChatPath = "/new-chat";
   static const String chatDetailPath = "/chats/:chatId";
 
   static String chatDetail(String chatId) => "/chats/$chatId";
 
   static bool isAuthRoute(String path) {
-    return path == loginPath || path == registerPath || path == root;
+    return path == loginPath ||
+        path == registerPath ||
+        path == root;
   }
 }

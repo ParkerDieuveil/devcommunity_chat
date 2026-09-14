@@ -12,6 +12,19 @@ class ProfileRemoteDatasource {
     return snapshot.data();
   }
 
+  Stream<List<ProfileModel>> watchProfiles() {
+    return firestore.collection('users').snapshots().map((snapshot) {
+      return snapshot.docs
+          .map(
+            (doc) => ProfileModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+        }),
+      )
+          .toList();
+    });
+  }
+
   Future<void> saveProfile(ProfileModel profile) {
     return firestore.collection('users').doc(profile.id).set(profile.toJson());
   }

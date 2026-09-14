@@ -21,7 +21,16 @@ class ChatRepositoryImpl implements ChatRepository {
       throw _wrap(error, 'Impossible de charger les conversations.');
     }
   }
-
+  @override
+  Future<void> markMessagesAsRead({
+    required String chatId,
+    required String userId,
+  }) {
+    return remoteDataSource.markMessagesAsRead(
+      chatId: chatId,
+      userId: userId,
+    );
+  }
   @override
   Stream<List<MessageEntity>> watchMessages(String chatId) {
     try {
@@ -31,6 +40,11 @@ class ChatRepositoryImpl implements ChatRepository {
     } catch (error) {
       throw _wrap(error, 'Impossible de charger les messages.');
     }
+  }
+
+  @override
+  Future<ChatEntity?> getChat(String chatId) {
+    return remoteDataSource.getChat(chatId);
   }
 
   @override
