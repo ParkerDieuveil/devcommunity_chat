@@ -31,6 +31,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final authState = ref.watch(authStateProvider);
     final authControllerState = ref.watch(authControllerProvider);
 
+
     return authState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text('Erreur : $error')),
