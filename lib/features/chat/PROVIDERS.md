@@ -21,8 +21,11 @@ Gérer `loading` / `data` / `error` via `AsyncValue.when`.
 | Provider | Type | Usage |
 |----------|------|--------|
 | `createChatUseCaseProvider` | `Provider<CreateChatUseCase>` | `ref.read(...).call(participantIds)` |
-| `sendMessageUseCaseProvider` | `Provider<SendMessageUseCase>` | `ref.read(...).call(chatId:, senderId:, text:)` |
+| `sendMessageUseCaseProvider` | `Provider<SendMessageUseCase>` | texte : `call(chatId:, senderId:, text:)` |
+| `sendChatImageUseCaseProvider` | `Provider<SendChatImageUseCase>` | image : pick → Storage → message `type: image` |
 | `syncUserProfileUseCaseProvider` | `Provider<SyncUserProfileUseCase>` | appelé depuis auth après login/register |
+
+Storage path images chat : `chats/{chatId}/images/{file}`. Rules : `storage.rules`.
 
 ## Infra (interne)
 
