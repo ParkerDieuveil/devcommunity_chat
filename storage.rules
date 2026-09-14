@@ -9,14 +9,27 @@ service firebase.storage {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isValidAvatar() {
+    function isChatParticipant(chatId) {
+      return isSignedIn()
+        && request.auth.uid in firestore.get(
+             /databases/(default)/documents/chats/$(chatId)
+           ).data.participantIds;
+    }
+
+    function isValidImage() {
       return request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
 
+    match /chats/{chatId}/images/{fileName} {
+      allow read: if isChatParticipant(chatId);
+      allow create, update: if isChatParticipant(chatId) && isValidImage();
+      allow delete: if isChatParticipant(chatId);
+    }
+
     match /users/{userId}/avatar/{fileName} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(userId) && isValidAvatar();
+      allow create, update: if isOwner(userId) && isValidImage();
       allow delete: if isOwner(userId);
     }
   }
