@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DevCommunity a besoin d’accéder à ta galerie pour changer ta photo de profil.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DevCommunity a besoin de la caméra pour prendre une photo de profil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>DevCommunity peut enregistrer des images liées à ton profil.</string>
 </dict>
 </plist>
