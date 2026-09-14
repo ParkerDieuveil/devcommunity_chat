@@ -10,12 +10,14 @@ class SendMessageUseCase {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   }) {
     return repository.sendMessage(
       chatId: chatId,
       senderId: senderId,
       text: text,
       imageUrl: imageUrl,
+      audioUrl: audioUrl,
     );
   }
 }

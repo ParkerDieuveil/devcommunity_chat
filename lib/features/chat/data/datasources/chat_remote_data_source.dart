@@ -14,6 +14,7 @@ abstract class ChatRemoteDataSource {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   });
 
   Future<String> createChat(List<String> participantIds);
@@ -92,15 +93,22 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   }) async {
-    final isImage =
-        imageUrl != null && imageUrl.isNotEmpty;
+    final isImage = imageUrl != null && imageUrl.isNotEmpty;
+    final isAudio = audioUrl != null && audioUrl.isNotEmpty;
 
-    final type = isImage ? 'image' : 'text';
+    final type = isAudio
+        ? 'audio'
+        : isImage
+            ? 'image'
+            : 'text';
 
-    final preview = isImage
-        ? (text?.isNotEmpty == true ? text! : '[image]')
-        : (text ?? '');
+    final preview = isAudio
+        ? '[audio]'
+        : isImage
+            ? (text?.isNotEmpty == true ? text! : '[image]')
+            : (text ?? '');
 
     final batch = firestore.batch();
 
@@ -113,6 +121,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'senderId': senderId,
       'text': text,
       'imageUrl': imageUrl,
+      'audioUrl': audioUrl,
       'type': type,
       'timestamp': FieldValue.serverTimestamp(),
 

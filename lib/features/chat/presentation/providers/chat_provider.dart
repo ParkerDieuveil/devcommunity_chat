@@ -21,6 +21,7 @@ import '../../domain/services/chat_media_validator.dart';
 import '../../domain/usecases/create_chat_use_case.dart';
 import '../../domain/usecases/get_chat_use_case.dart';
 import '../../domain/usecases/mark_messages_as_read_use_case.dart';
+import '../../domain/usecases/send_chat_audio_use_case.dart';
 import '../../domain/usecases/send_chat_image_use_case.dart';
 import '../../domain/usecases/send_message_use_case.dart';
 import '../../domain/usecases/sync_user_profile_use_case.dart';
@@ -117,6 +118,13 @@ final sendChatImageUseCaseProvider = Provider<SendChatImageUseCase>((ref) {
     imageSource: ref.watch(chatMediaImageSourceProvider),
     validator: ref.watch(chatMediaValidatorProvider),
     processor: ref.watch(chatMediaImageProcessorProvider),
+    mediaStorage: ref.watch(chatMediaStorageProvider),
+    chatRepository: ref.watch(chatRepositoryProvider),
+  );
+});
+
+final sendChatAudioUseCaseProvider = Provider<SendChatAudioUseCase>((ref) {
+  return SendChatAudioUseCase(
     mediaStorage: ref.watch(chatMediaStorageProvider),
     chatRepository: ref.watch(chatRepositoryProvider),
   );

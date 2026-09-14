@@ -9,12 +9,14 @@ class SentMessage {
   final String senderId;
   final String? text;
   final String? imageUrl;
+  final String? audioUrl;
 
   SentMessage({
     required this.chatId,
     required this.senderId,
     this.text,
     this.imageUrl,
+    this.audioUrl,
   });
 }
 
@@ -69,6 +71,7 @@ class FakeChatRepository implements ChatRepository {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   }) async {
     if (sendMessageError != null) {
       throw sendMessageError!;
@@ -80,6 +83,7 @@ class FakeChatRepository implements ChatRepository {
         senderId: senderId,
         text: text,
         imageUrl: imageUrl,
+        audioUrl: audioUrl,
       ),
     );
   }

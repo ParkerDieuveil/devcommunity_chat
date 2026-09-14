@@ -53,6 +53,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   }) async {
     try {
       await remoteDataSource.sendMessage(
@@ -60,6 +61,7 @@ class ChatRepositoryImpl implements ChatRepository {
         senderId: senderId,
         text: text,
         imageUrl: imageUrl,
+        audioUrl: audioUrl,
       );
     } catch (error) {
       throw _wrap(error, 'Impossible d’envoyer le message.');

@@ -12,6 +12,7 @@ abstract class ChatRepository {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   });
   Future<void> markMessagesAsRead({
     required String chatId,
