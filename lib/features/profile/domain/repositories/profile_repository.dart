@@ -3,6 +3,8 @@ import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
 abstract interface class ProfileRepository {
   Future<ProfileEntity?> getProfile(String userId);
 
+  Stream<List<ProfileEntity>> watchProfiles();
+
   Future<void> saveProfile(ProfileEntity profile);
 
   Future<ProfileEntity> updateProfile({

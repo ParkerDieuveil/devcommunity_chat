@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/domain/entities/profile.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../domain/entities/message_entity.dart';
 import '../providers/chat_provider.dart';
 
@@ -14,12 +16,24 @@ class ChatMessagesPage extends ConsumerStatefulWidget {
   final String chatId;
 
   @override
-  ConsumerState<ChatMessagesPage> createState() => _ChatMessagesPageState();
+  ConsumerState<ChatMessagesPage> createState() =>
+      _ChatMessagesPageState();
 }
 
-class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
+class _ChatMessagesPageState
+    extends ConsumerState<ChatMessagesPage> {
   final _controller = TextEditingController();
+
   var _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _markMessagesAsRead();
+    });
+  }
 
   @override
   void dispose() {
@@ -27,47 +41,153 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     super.dispose();
   }
 
+  Future<void> _markMessagesAsRead() async {
+    final user = ref.read(currentUserProvider);
+
+    if (user == null) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(markMessagesAsReadUseCaseProvider)
+          .call(
+        chatId: widget.chatId,
+        userId: user.id,
+      );
+    } catch (_) {
+      // Ne bloque pas l'ouverture du chat
+      // si le marquage comme lu échoue.
+    }
+  }
+
   Future<void> _send() async {
     final user = ref.read(currentUserProvider);
+
     final text = _controller.text.trim();
+
     if (user == null || text.isEmpty || _sending) {
       return;
     }
 
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+    });
+
     try {
       await ref.read(sendMessageUseCaseProvider).call(
-            chatId: widget.chatId,
-            senderId: user.id,
-            text: text,
-          );
+        chatId: widget.chatId,
+        senderId: user.id,
+        text: text,
+      );
+
       _controller.clear();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(
+          content: Text(error.toString()),
+        ),
       );
     } finally {
       if (mounted) {
-        setState(() => _sending = false);
+        setState(() {
+          _sending = false;
+        });
       }
     }
+  }
+
+  String _getOtherUserId(
+      String currentUserId,
+      List<String> participantIds,
+      ) {
+    for (final participantId in participantIds) {
+      if (participantId != currentUserId) {
+        return participantId;
+      }
+    }
+
+    return '';
+  }
+
+  ProfileEntity? _getOtherProfile({
+    required String currentUserId,
+    required List<String> participantIds,
+    required List<ProfileEntity> profiles,
+  }) {
+    final otherUserId = _getOtherUserId(
+      currentUserId,
+      participantIds,
+    );
+
+    if (otherUserId.isEmpty) {
+      return null;
+    }
+
+    for (final profile in profiles) {
+      if (profile.id == otherUserId) {
+        return profile;
+      }
+    }
+
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final messagesAsync = ref.watch(chatMessagesProvider(widget.chatId));
+
+    final messagesAsync =
+    ref.watch(chatMessagesProvider(widget.chatId));
+
+    final profilesAsync = ref.watch(profilesProvider);
+
+    final chatAsync =
+    ref.watch(chatByIdProvider(widget.chatId));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat ${widget.chatId}'),
+        title: chatAsync.when(
+          loading: () => const Text('Chat'),
+          error: (_, _) => const Text('Chat'),
+          data: (chat) {
+            if (chat == null || user == null) {
+              return const Text('Chat');
+            }
+
+            return profilesAsync.when(
+              loading: () => const Text('Chat'),
+              error: (_, _) => const Text('Chat'),
+              data: (profiles) {
+                final profile = _getOtherProfile(
+                  currentUserId: user.id,
+                  participantIds: chat.participantIds,
+                  profiles: profiles,
+                );
+
+                return Text(
+                  profile?.displayname.isNotEmpty == true
+                      ? profile!.displayname
+                      : profile?.email.isNotEmpty == true
+                      ? profile!.email
+                      : 'Utilisateur',
+                );
+              },
+            );
+          },
+        ),
       ),
       body: Column(
         children: [
           Expanded(
             child: messagesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
               error: (error, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -79,7 +199,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
               ),
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(child: Text('Aucun message'));
+                  return const Center(
+                    child: Text('Aucun message'),
+                  );
                 }
 
                 return ListView.builder(
@@ -87,16 +209,28 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final mine = message.senderId == user?.id;
-                    return _MessageBubble(message: message, mine: mine);
+
+                    final mine =
+                        message.senderId == user?.id;
+
+                    return _MessageBubble(
+                      message: message,
+                      mine: mine,
+                    );
                   },
                 );
               },
             ),
           ),
+
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              padding: const EdgeInsets.fromLTRB(
+                12,
+                0,
+                12,
+                12,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -113,10 +247,13 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                     onPressed: _sending ? null : _send,
                     icon: _sending
                         ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                      width: 20,
+                      height: 20,
+                      child:
+                      CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
                         : const Icon(Icons.send),
                   ),
                 ],
@@ -141,18 +278,49 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: mine
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
           color: mine
               ? theme.colorScheme.primaryContainer
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(message.text ?? message.imageUrl ?? ''),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Flexible(
+              child: Text(
+                message.text ??
+                    message.imageUrl ??
+                    '',
+              ),
+            ),
+
+            if (mine) ...[
+              const SizedBox(width: 6),
+              Icon(
+                message.isRead
+                    ? Icons.done_all
+                    : Icons.done,
+                size: 16,
+                color: message.isRead
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

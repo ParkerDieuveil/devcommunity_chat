@@ -11,13 +11,16 @@ class MessageModel extends MessageEntity {
     super.imageUrl,
     required super.type,
     required super.timestamp,
+    super.readAt,
   });
 
   factory MessageModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
+
     final chatId = doc.reference.parent.parent?.id ?? '';
 
     final typeRaw = data['type'] as String? ?? 'text';
+
     final type = typeRaw == MessageType.image.name
         ? MessageType.image
         : MessageType.text;
@@ -29,8 +32,11 @@ class MessageModel extends MessageEntity {
       text: data['text'] as String?,
       imageUrl: data['imageUrl'] as String?,
       type: type,
-      // serverTimestamp encore null sur le 1er snapshot local.
-      timestamp: _readDateTime(data['timestamp']) ?? DateTime.now(),
+
+      timestamp:
+      _readDateTime(data['timestamp']) ?? DateTime.now(),
+
+      readAt: _readDateTime(data['readAt']),
     );
   }
 
@@ -41,6 +47,9 @@ class MessageModel extends MessageEntity {
       'imageUrl': imageUrl,
       'type': type.name,
       'timestamp': Timestamp.fromDate(timestamp),
+      'readAt': readAt == null
+          ? null
+          : Timestamp.fromDate(readAt!),
     };
   }
 
@@ -48,9 +57,11 @@ class MessageModel extends MessageEntity {
     if (value is Timestamp) {
       return value.toDate();
     }
+
     if (value is DateTime) {
       return value;
     }
+
     return null;
   }
 }

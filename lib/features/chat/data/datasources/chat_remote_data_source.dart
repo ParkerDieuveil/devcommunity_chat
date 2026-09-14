@@ -5,6 +5,7 @@ import '../models/message_model.dart';
 
 abstract class ChatRemoteDataSource {
   Stream<List<ChatModel>> watchUserChats(String userId);
+  Future<ChatModel?> getChat(String chatId);
 
   Stream<List<MessageModel>> watchMessages(String chatId);
 
@@ -16,12 +17,19 @@ abstract class ChatRemoteDataSource {
   });
 
   Future<String> createChat(List<String> participantIds);
+
+  Future<void> markMessagesAsRead({
+    required String chatId,
+    required String userId,
+  });
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   final FirebaseFirestore firestore;
 
-  ChatRemoteDataSourceImpl({required this.firestore});
+  ChatRemoteDataSourceImpl({
+    required this.firestore,
+  });
 
   CollectionReference<Map<String, dynamic>> get _chats =>
       firestore.collection('chats');
@@ -29,28 +37,53 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   @override
   Stream<List<ChatModel>> watchUserChats(String userId) {
     return _chats
-        .where('participantIds', arrayContains: userId)
-        .orderBy('lastMessageAt', descending: true)
+        .where(
+      'participantIds',
+      arrayContains: userId,
+    )
+        .orderBy(
+      'lastMessageAt',
+      descending: true,
+    )
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => ChatModel.fromFirestore(doc))
-              .toList(),
-        );
+          .map(
+            (doc) => ChatModel.fromFirestore(doc),
+      )
+          .toList(),
+    );
   }
 
   @override
-  Stream<List<MessageModel>> watchMessages(String chatId) {
+  Future<ChatModel?> getChat(String chatId) async {
+    final doc = await _chats.doc(chatId).get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    return ChatModel.fromFirestore(doc);
+  }
+  @override
+  Stream<List<MessageModel>> watchMessages(
+      String chatId,
+      ) {
     return _chats
         .doc(chatId)
         .collection('messages')
-        .orderBy('timestamp', descending: false)
+        .orderBy(
+      'timestamp',
+      descending: false,
+    )
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => MessageModel.fromFirestore(doc))
-              .toList(),
-        );
+          .map(
+            (doc) => MessageModel.fromFirestore(doc),
+      )
+          .toList(),
+    );
   }
 
   @override
@@ -60,13 +93,21 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     String? text,
     String? imageUrl,
   }) async {
-    final isImage = imageUrl != null && imageUrl.isNotEmpty;
-    final type = isImage ? 'image' : 'text';
-    final preview = isImage ? (text?.isNotEmpty == true ? text! : '[image]') : (text ?? '');
+    final isImage =
+        imageUrl != null && imageUrl.isNotEmpty;
 
-    // Message + preview du chat dans le même batch.
+    final type = isImage ? 'image' : 'text';
+
+    final preview = isImage
+        ? (text?.isNotEmpty == true ? text! : '[image]')
+        : (text ?? '');
+
     final batch = firestore.batch();
-    final messageRef = _chats.doc(chatId).collection('messages').doc();
+
+    final messageRef = _chats
+        .doc(chatId)
+        .collection('messages')
+        .doc();
 
     batch.set(messageRef, {
       'senderId': senderId,
@@ -74,24 +115,34 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'imageUrl': imageUrl,
       'type': type,
       'timestamp': FieldValue.serverTimestamp(),
+
+      // Nouveau message = pas encore lu.
+      'readAt': null,
     });
 
-    batch.update(_chats.doc(chatId), {
-      'lastMessage': preview,
-      'lastMessageSenderId': senderId,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-    });
+    batch.update(
+      _chats.doc(chatId),
+      {
+        'lastMessage': preview,
+        'lastMessageSenderId': senderId,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+      },
+    );
 
     await batch.commit();
   }
 
   @override
-  Future<String> createChat(List<String> participantIds) async {
-    // isEqualTo sur un array = égalité stricte (ordre inclus).
+  Future<String> createChat(
+      List<String> participantIds,
+      ) async {
     final sortedIds = [...participantIds]..sort();
 
     final existing = await _chats
-        .where('participantIds', isEqualTo: sortedIds)
+        .where(
+      'participantIds',
+      isEqualTo: sortedIds,
+    )
         .limit(1)
         .get();
 
@@ -100,7 +151,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     }
 
     final docRef = _chats.doc();
-    // Sans lastMessageAt, le doc sort mal / disparaît du orderBy ci-dessus.
+
     await docRef.set({
       'participantIds': sortedIds,
       'lastMessage': null,
@@ -110,5 +161,39 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     });
 
     return docRef.id;
+  }
+
+  @override
+  Future<void> markMessagesAsRead({
+    required String chatId,
+    required String userId,
+  }) async {
+    final snapshot = await _chats
+        .doc(chatId)
+        .collection('messages')
+        .get();
+
+    final batch = firestore.batch();
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+
+      final senderId = data['senderId'] as String?;
+
+      final readAt = data['readAt'];
+
+      // On marque uniquement les messages reçus
+      // et qui ne sont pas encore lus.
+      if (senderId != userId && readAt == null) {
+        batch.update(
+          doc.reference,
+          {
+            'readAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+    }
+
+    await batch.commit();
   }
 }
