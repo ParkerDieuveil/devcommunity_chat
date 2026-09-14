@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:devcommunitychat/core/router/app_route_path.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/domain/entities/chat_entity.dart';
@@ -26,18 +28,36 @@ void main() {
     });
 
     Future<void> pumpPage(WidgetTester tester) {
+      final router = GoRouter(
+        initialLocation: AppRoutePath.chatsPath,
+        routes: [
+          GoRoute(
+            path: AppRoutePath.chatsPath,
+            builder: (_, _) => const ChatsPage(),
+          ),
+          GoRoute(
+            path: AppRoutePath.newChatPath,
+            builder: (_, _) => const Scaffold(body: Text('New chat stub')),
+          ),
+          GoRoute(
+            path: AppRoutePath.createGroupPath,
+            builder: (_, _) => const Scaffold(body: Text('Create group stub')),
+          ),
+        ],
+      );
+
       return tester.pumpWidget(
         ProviderScope(
           overrides: [
             authStateProvider.overrideWith(
-                  (ref) => Stream.value(_user),
+              (ref) => Stream.value(_user),
             ),
             chatRepositoryProvider.overrideWithValue(
               fakeRepository,
             ),
             profilesProvider.overrideWith(
-                  (ref) => Stream.value([
-                ProfileEntity(
+              (ref) => Stream.value([
+                const ProfileEntity(
                   id: 'user-2',
                   displayname: 'Jean Dupont',
                   email: 'jean@example.com',
@@ -47,32 +67,44 @@ void main() {
               ]),
             ),
           ],
-          child: const MaterialApp(
-            home: ChatsPage(),
-          ),
+          child: MaterialApp.router(routerConfig: router),
         ),
       );
     }
 
     testWidgets(
-      'affiche "Aucune conversation" si la liste est vide',
-          (tester) async {
+      'affiche un empty state si la liste est vide',
+      (tester) async {
         await pumpPage(tester);
         await tester.pump();
 
         fakeRepository.emitChats([]);
         await tester.pump();
 
-        expect(
-          find.text('Aucune conversation'),
-          findsOneWidget,
-        );
+        expect(find.text('Aucune discussion'), findsOneWidget);
+        expect(find.text('Nouvelle discussion'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'le + ouvre le menu Ajouter un contact / Créer un groupe',
+      (tester) async {
+        await pumpPage(tester);
+        await tester.pump();
+        fakeRepository.emitChats([]);
+        await tester.pump();
+
+        await tester.tap(find.byTooltip('Ajouter'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Ajouter un contact'), findsOneWidget);
+        expect(find.text('Créer un groupe'), findsOneWidget);
       },
     );
 
     testWidgets(
       'affiche les conversations reçues en temps réel',
-          (tester) async {
+      (tester) async {
         await pumpPage(tester);
         await tester.pump();
 
@@ -93,15 +125,8 @@ void main() {
 
         await tester.pump();
 
-        expect(
-          find.text('Jean Dupont'),
-          findsOneWidget,
-        );
-
-        expect(
-          find.text('A demain !'),
-          findsOneWidget,
-        );
+        expect(find.text('Jean Dupont'), findsOneWidget);
+        expect(find.text('A demain !'), findsOneWidget);
       },
     );
   });

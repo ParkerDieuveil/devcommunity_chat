@@ -54,13 +54,7 @@ void main() {
 
     expect(find.text('Alexandre'), findsOneWidget);
     expect(find.text('alex@example.com'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is RichText && widget.text.toPlainText().contains('@alex'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('@alex'), findsOneWidget);
     expect(find.text('Modifier mon profil'), findsOneWidget);
     expect(find.text('Déconnexion'), findsOneWidget);
   });
