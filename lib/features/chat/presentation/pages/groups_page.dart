@@ -22,9 +22,7 @@ class GroupsPage extends ConsumerWidget {
     final s = ref.watch(appStringsProvider);
 
     if (user == null) {
-      return Scaffold(
-        body: Center(child: Text(s.sessionRequired)),
-      );
+      return Scaffold(body: Center(child: Text(s.sessionRequired)));
     }
 
     final chatsAsync = ref.watch(userChatsProvider(user.id));
@@ -58,8 +56,7 @@ class GroupsPage extends ConsumerWidget {
                     title: s.emptyGroupsTitle,
                     subtitle: s.emptyGroupsSubtitle,
                     buttonLabel: s.createGroup,
-                    onAction: () =>
-                        context.push(AppRoutePath.createGroupPath),
+                    onAction: () => context.push(AppRoutePath.createGroupPath),
                   );
                 }
 

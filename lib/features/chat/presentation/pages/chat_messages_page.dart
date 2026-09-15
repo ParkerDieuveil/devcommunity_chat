@@ -19,10 +19,7 @@ import '../widgets/chat_message_input_bar.dart';
 import '../widgets/voice_record_sheet.dart';
 
 class ChatMessagesPage extends ConsumerStatefulWidget {
-  const ChatMessagesPage({
-    super.key,
-    required this.chatId,
-  });
+  const ChatMessagesPage({super.key, required this.chatId});
 
   final String chatId;
 
@@ -73,10 +70,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     if (user == null) return;
 
     try {
-      await ref.read(markMessagesAsReadUseCaseProvider).call(
-            chatId: widget.chatId,
-            userId: user.id,
-          );
+      await ref
+          .read(markMessagesAsReadUseCaseProvider)
+          .call(chatId: widget.chatId, userId: user.id);
     } catch (_) {}
   }
 
@@ -90,17 +86,15 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
       _attachmentsOpen = false;
     });
     try {
-      await ref.read(sendMessageUseCaseProvider).call(
-            chatId: widget.chatId,
-            senderId: user.id,
-            text: text,
-          );
+      await ref
+          .read(sendMessageUseCaseProvider)
+          .call(chatId: widget.chatId, senderId: user.id, text: text);
       _controller.clear();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -116,7 +110,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
       _attachmentsOpen = false;
     });
     try {
-      final sent = await ref.read(sendChatImageUseCaseProvider).call(
+      final sent = await ref
+          .read(sendChatImageUseCaseProvider)
+          .call(
             chatId: widget.chatId,
             senderId: user.id,
             source: source,
@@ -127,9 +123,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
       }
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -151,16 +147,14 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
 
     setState(() => _sending = true);
     try {
-      await ref.read(sendChatAudioUseCaseProvider).call(
-            chatId: widget.chatId,
-            senderId: user.id,
-            localPath: path,
-          );
+      await ref
+          .read(sendChatAudioUseCaseProvider)
+          .call(chatId: widget.chatId, senderId: user.id, localPath: path);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => _sending = false);
       try {
@@ -216,8 +210,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final chatBg =
-        isDark ? AppColors.chatCanvasDark : AppColors.chatCanvasLight;
+    final chatBg = isDark
+        ? AppColors.chatCanvasDark
+        : AppColors.chatCanvasLight;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -235,8 +230,7 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
             child: ColoredBox(
               color: chatBg,
               child: messagesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
