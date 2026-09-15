@@ -38,9 +38,9 @@ Future<ChatAddMenuAction?> showChatAddMenu(
                 ),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.groups_outlined,
-                  color: Color(0xFF616161),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 title: Text(
                   createGroupLabel,

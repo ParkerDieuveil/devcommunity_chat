@@ -53,6 +53,9 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   }
 
   InputDecoration _fieldDecoration(String label) {
+    final borderColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.borderDark
+        : AppColors.borderSubtle;
     return InputDecoration(
       labelText: label,
       filled: true,
@@ -60,11 +63,11 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 /// Bouton circulaire (retour / menu) pour les en-têtes de conversation.
 class RoundIconButton extends StatelessWidget {
   const RoundIconButton({
@@ -14,7 +16,7 @@ class RoundIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF1E2738) : Colors.white;
+    final bg = isDark ? AppColors.surfaceElevatedDark : Colors.white;
     final iconColor = Theme.of(context).colorScheme.onSurface;
 
     return Material(

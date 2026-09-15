@@ -35,7 +35,7 @@ class ChatMessageBubble extends StatelessWidget {
 
     final bubbleColor = mine
         ? AppColors.brand
-        : (isDark ? const Color(0xFF1E2738) : Colors.white);
+        : (isDark ? AppColors.surfaceElevatedDark : Colors.white);
     final textColor = mine ? Colors.white : colors.onSurface;
     final metaColor = mine
         ? Colors.white.withValues(alpha: 0.85)

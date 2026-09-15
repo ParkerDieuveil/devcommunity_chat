@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/locale/app_strings.dart';
 import '../../../../core/router/app_route_path.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../providers/onboarding_provider.dart';
 
 class _OnboardingStep {
@@ -16,29 +18,6 @@ class _OnboardingStep {
   final String title;
   final String subtitle;
 }
-
-const _steps = <_OnboardingStep>[
-  _OnboardingStep(
-    asset: 'assets/images/step1.png',
-    title: 'Group Chatting',
-    subtitle: 'Connect with multiple members in group chats.',
-  ),
-  _OnboardingStep(
-    asset: 'assets/images/step2.png',
-    title: 'Video And Voice Calls',
-    subtitle: 'Instantly connect via video and voice calls.',
-  ),
-  _OnboardingStep(
-    asset: 'assets/images/step3.png',
-    title: 'Message Encryption',
-    subtitle: 'Ensure privacy with encrypted messages.',
-  ),
-  _OnboardingStep(
-    asset: 'assets/images/step4.png',
-    title: 'Cross-Platform Compatibility',
-    subtitle: 'Access chats on any device seamlessly.',
-  ),
-];
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -63,8 +42,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     context.go(AppRoutePath.loginPath);
   }
 
-  void _next() {
-    if (_index >= _steps.length - 1) {
+  void _next(int stepCount) {
+    if (_index >= stepCount - 1) {
       _finish();
       return;
     }
@@ -74,9 +53,34 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     );
   }
 
+  List<_OnboardingStep> _stepsFor(AppStrings s) => [
+        _OnboardingStep(
+          asset: 'assets/images/step1.png',
+          title: s.onboardingStep1Title,
+          subtitle: s.onboardingStep1Subtitle,
+        ),
+        _OnboardingStep(
+          asset: 'assets/images/step2.png',
+          title: s.onboardingStep2Title,
+          subtitle: s.onboardingStep2Subtitle,
+        ),
+        _OnboardingStep(
+          asset: 'assets/images/step3.png',
+          title: s.onboardingStep3Title,
+          subtitle: s.onboardingStep3Subtitle,
+        ),
+        _OnboardingStep(
+          asset: 'assets/images/step4.png',
+          title: s.onboardingStep4Title,
+          subtitle: s.onboardingStep4Subtitle,
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
+    final s = ref.watch(appStringsProvider);
+    final steps = _stepsFor(s);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -88,7 +92,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             bottom: 0,
             height: size.height * 0.42,
             child: CustomPaint(
-              painter: _WavePainter(color: const Color(0xFFE3F2FD)),
+              painter: _WavePainter(color: AppColors.brandSurfaceAlt),
               child: const SizedBox.expand(),
             ),
           ),
@@ -98,10 +102,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 Expanded(
                   child: PageView.builder(
                     controller: _controller,
-                    itemCount: _steps.length,
+                    itemCount: steps.length,
                     onPageChanged: (value) => setState(() => _index = value),
                     itemBuilder: (context, index) {
-                      final step = _steps[index];
+                      final step = steps[index];
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 28),
                         child: Column(
@@ -130,8 +134,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             Text(
                               step.subtitle,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Color(0xFF42A5F5),
+                              style: TextStyle(
+                                color: AppColors.brandLight,
                                 fontSize: 15,
                                 height: 1.35,
                               ),
@@ -152,11 +156,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(28),
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF40C4FF), Color(0xFF03A9F4)],
+                          colors: [AppColors.brandLight, AppColors.brand],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF03A9F4).withValues(alpha: 0.35),
+                            color: AppColors.brand.withValues(alpha: 0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -167,10 +171,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(28),
                           onTap: _finish,
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Get started',
-                              style: TextStyle(
+                              s.getStarted,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w700,
@@ -188,9 +192,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     children: [
                       TextButton(
                         onPressed: _finish,
-                        child: const Text(
-                          'Skip',
-                          style: TextStyle(
+                        child: Text(
+                          s.skip,
+                          style: const TextStyle(
                             color: Color(0xFF64B5F6),
                             fontWeight: FontWeight.w500,
                           ),
@@ -199,7 +203,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       Expanded(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(_steps.length, (i) {
+                          children: List.generate(steps.length, (i) {
                             final active = i == _index;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 220),
@@ -209,7 +213,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: active
-                                    ? const Color(0xFF1565C0)
+                                    ? AppColors.headerBlue
                                     : const Color(0xFFBBDEFB),
                               ),
                             );
@@ -221,14 +225,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: _next,
-                          child: const SizedBox(
+                          onTap: () => _next(steps.length),
+                          child: SizedBox(
                             width: 52,
                             height: 52,
                             child: Center(
                               child: Text(
-                                'Next',
-                                style: TextStyle(
+                                s.next,
+                                style: const TextStyle(
                                   color: Color(0xFF0F4888),
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,

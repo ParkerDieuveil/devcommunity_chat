@@ -1,5 +1,10 @@
 /// Formats relative / short timestamps for chat lists and bubbles.
-String formatChatTimestamp(DateTime? dateTime, {DateTime? now}) {
+String formatChatTimestamp(
+  DateTime? dateTime, {
+  DateTime? now,
+  String yesterdayLabel = 'Yesterday',
+  List<String>? weekdayLabels,
+}) {
   if (dateTime == null) return '';
 
   final current = now ?? DateTime.now();
@@ -15,19 +20,20 @@ String formatChatTimestamp(DateTime? dateTime, {DateTime? now}) {
 
   final yesterday = today.subtract(const Duration(days: 1));
   if (day == yesterday) {
-    return 'Hier';
+    return yesterdayLabel;
   }
 
   if (current.difference(local).inDays < 7) {
-    const weekdays = <String>[
-      'lun.',
-      'mar.',
-      'mer.',
-      'jeu.',
-      'ven.',
-      'sam.',
-      'dim.',
-    ];
+    final weekdays = weekdayLabels ??
+        const <String>[
+          'Mon',
+          'Tue',
+          'Wed',
+          'Thu',
+          'Fri',
+          'Sat',
+          'Sun',
+        ];
     return weekdays[local.weekday - 1];
   }
 

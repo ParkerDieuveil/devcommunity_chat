@@ -40,11 +40,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Group Chatting'), findsOneWidget);
-    expect(find.text('Get started'), findsOneWidget);
-    expect(find.text('Skip'), findsOneWidget);
+    expect(find.text('Discussions d’équipe'), findsOneWidget);
+    expect(find.text('Commencer'), findsOneWidget);
+    expect(find.text('Passer'), findsOneWidget);
 
-    await tester.tap(find.text('Skip'));
+    await tester.tap(find.text('Passer'));
     await tester.pumpAndSettle();
 
     expect(find.text('Login stub'), findsOneWidget);

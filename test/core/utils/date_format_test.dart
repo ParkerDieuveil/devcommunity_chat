@@ -5,6 +5,15 @@ import 'package:devcommunitychat/core/utils/date_format.dart';
 void main() {
   group('formatChatTimestamp', () {
     final now = DateTime(2026, 9, 14, 15, 30);
+    const frWeekdays = [
+      'lun.',
+      'mar.',
+      'mer.',
+      'jeu.',
+      'ven.',
+      'sam.',
+      'dim.',
+    ];
 
     test('affiche l\'heure pour aujourd\'hui', () {
       expect(
@@ -13,16 +22,35 @@ void main() {
       );
     });
 
-    test('affiche Hier pour la veille', () {
+    test('affiche Hier pour la veille (FR)', () {
       expect(
-        formatChatTimestamp(DateTime(2026, 9, 13, 20, 0), now: now),
+        formatChatTimestamp(
+          DateTime(2026, 9, 13, 20, 0),
+          now: now,
+          yesterdayLabel: 'Hier',
+        ),
         'Hier',
+      );
+    });
+
+    test('affiche Yesterday pour la veille (EN)', () {
+      expect(
+        formatChatTimestamp(
+          DateTime(2026, 9, 13, 20, 0),
+          now: now,
+          yesterdayLabel: 'Yesterday',
+        ),
+        'Yesterday',
       );
     });
 
     test('affiche le jour de la semaine sous 7 jours', () {
       expect(
-        formatChatTimestamp(DateTime(2026, 9, 10, 12, 0), now: now),
+        formatChatTimestamp(
+          DateTime(2026, 9, 10, 12, 0),
+          now: now,
+          weekdayLabels: frWeekdays,
+        ),
         'jeu.',
       );
     });

@@ -62,9 +62,10 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
       context.push(AppRoutePath.chatDetail(chatId));
     } catch (error) {
       if (!mounted) return;
+      final s = ref.read(appStringsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Impossible de créer la conversation : $error'),
+          content: Text('${s.createChatFailed} : $error'),
         ),
       );
     } finally {
@@ -120,7 +121,7 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(
-                    'Impossible de charger les utilisateurs.\n\n$error',
+                    '${s.loadUsersFailed}.\n\n$error',
                     textAlign: TextAlign.center,
                   ),
                 ),

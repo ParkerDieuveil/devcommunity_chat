@@ -12,4 +12,12 @@ abstract final class AppColors {
   static const sheetHandle = Color(0xFFBDBDBD);
   static const navBarDark = Color(0xFF121826);
   static const scaffoldDark = Color(0xFF0B0F19);
+  static const surfaceElevatedDark = Color(0xFF1E2738);
+  static const inputFillDark = Color(0xFF1A2233);
+  static const inputFillLight = Color(0xFFF0F2F5);
+  static const chatCanvasDark = Color(0xFF0F1520);
+  static const chatCanvasLight = Color(0xFFF5F7FA);
+  static const borderSubtle = Color(0xFFE0E0E0);
+  static const borderDark = Color(0xFF263041);
+  static const borderPanelLight = Color(0xFFEEF1F5);
 }

@@ -31,7 +31,7 @@ class ChatMessageInputBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final inputBarBg = isDark ? const Color(0xFF121826) : Colors.white;
+    final inputBarBg = isDark ? AppColors.navBarDark : Colors.white;
 
     return SafeArea(
       top: false,
@@ -61,8 +61,8 @@ class ChatMessageInputBar extends StatelessWidget {
                   hintStyle: TextStyle(color: colors.onSurfaceVariant),
                   filled: true,
                   fillColor: isDark
-                      ? const Color(0xFF1A2233)
-                      : const Color(0xFFF0F2F5),
+                      ? AppColors.inputFillDark
+                      : AppColors.inputFillLight,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 12,
