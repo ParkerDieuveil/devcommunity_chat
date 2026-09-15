@@ -38,6 +38,9 @@ class AppStrings {
   // —— Common ——
   String get cancel => isFrench ? 'Annuler' : 'Cancel';
   String get add => isFrench ? 'Ajouter' : 'Add';
+  String get getStarted => isFrench ? 'Commencer' : 'Get started';
+  String get skip => isFrench ? 'Passer' : 'Skip';
+  String get next => isFrench ? 'Suivant' : 'Next';
   String get save => isFrench ? 'Enregistrer' : 'Save';
   String get close => isFrench ? 'Fermer' : 'Close';
   String get search => isFrench ? 'Rechercher' : 'Search';
@@ -47,11 +50,27 @@ class AppStrings {
   String get groupFallback => isFrench ? 'Groupe' : 'Group';
   String get noMessagePreview =>
       isFrench ? 'Aucun message' : 'No messages';
+  String get yesterday => isFrench ? 'Hier' : 'Yesterday';
+  List<String> get weekdayShort => isFrench
+      ? const ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.']
+      : const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   String get comingSoon =>
       isFrench ? 'bientôt disponible' : 'coming soon';
   String get copiedToClipboard => isFrench
       ? 'Copié dans le presse-papiers'
       : 'Copied to clipboard';
+  String get createChatFailed => isFrench
+      ? 'Impossible de créer la conversation'
+      : 'Could not create the conversation';
+  String get createGroupFailed => isFrench
+      ? 'Impossible de créer le groupe'
+      : 'Could not create the group';
+  String get loadUsersFailed => isFrench
+      ? 'Impossible de charger les utilisateurs'
+      : 'Could not load users';
+  String get groupNameRequired => isFrench
+      ? 'Donnez un nom au groupe.'
+      : 'Enter a group name.';
 
   // —— Auth ——
   String get loginSubtitle => isFrench
@@ -178,12 +197,7 @@ class AppStrings {
   String get attachCamera => isFrench ? 'Caméra' : 'Camera';
   String get attachRecord =>
       isFrench ? 'Enregistrer' : 'Record';
-  String get attachContact => isFrench ? 'Contact' : 'Contact';
   String get attachGallery => isFrench ? 'Galerie' : 'Gallery';
-  String get attachLocation =>
-      isFrench ? 'Ma position' : 'My Location';
-  String get attachDocument =>
-      isFrench ? 'Document' : 'Document';
   String get voiceMessage =>
       isFrench ? 'Message vocal' : 'Voice message';
   String get voiceTapToSend => isFrench
@@ -248,6 +262,28 @@ class AppStrings {
   String get profileUpdateFailed => isFrench
       ? 'Échec de la mise à jour'
       : 'Update failed';
+
+  // —— Onboarding ——
+  String get onboardingStep1Title =>
+      isFrench ? 'Discussions d’équipe' : 'Team chats';
+  String get onboardingStep1Subtitle => isFrench
+      ? 'Échangez en direct avec vos collègues, en 1-1 ou en groupe.'
+      : 'Chat in real time with teammates, one-to-one or in groups.';
+  String get onboardingStep2Title =>
+      isFrench ? 'Images & vocaux' : 'Images & voice';
+  String get onboardingStep2Subtitle => isFrench
+      ? 'Partagez une photo ou un message vocal depuis votre téléphone.'
+      : 'Share a photo or a voice note from your phone.';
+  String get onboardingStep3Title =>
+      isFrench ? 'Profil d’équipe' : 'Team profile';
+  String get onboardingStep3Subtitle => isFrench
+      ? 'Présentez-vous avec un avatar, un titre et une bio.'
+      : 'Introduce yourself with an avatar, title, and bio.';
+  String get onboardingStep4Title =>
+      isFrench ? 'Temps réel Firebase' : 'Realtime with Firebase';
+  String get onboardingStep4Subtitle => isFrench
+      ? 'Auth, Firestore streams et messages synchronisés.'
+      : 'Auth, Firestore streams, and synced messages.';
 
   String languageLabel(Locale value) =>
       value.languageCode == 'fr' ? french : english;
