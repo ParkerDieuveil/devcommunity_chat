@@ -17,12 +17,11 @@ void main() {
         bio: 'Dev Flutter',
       );
 
-      expect(repository.updateCalls, hasLength(1));
-      final call = repository.updateCalls.single;
-      expect(call.userId, 'user-1');
-      expect(call.name, 'Alex');
-      expect(call.email, 'alex@example.com');
-      expect(call.bio, 'Dev Flutter');
+      expect(repository.updateProfileCallCount, 1);
+      expect(repository.lastUserId, 'user-1');
+      expect(repository.lastName, 'Alex');
+      expect(repository.lastEmail, 'alex@example.com');
+      expect(repository.lastBio, 'Dev Flutter');
       expect(result.displayname, 'Alex');
     });
 
