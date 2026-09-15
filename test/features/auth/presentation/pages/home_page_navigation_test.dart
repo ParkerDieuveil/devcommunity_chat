@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/pages/home_page.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
+import 'package:devcommunitychat/features/profile/presentation/providers/profile_provider.dart';
+
+import '../../../profile/fakes/fake_profile_repository.dart';
 
 void main() {
   group('HomePage - navigation par onglets', () {
@@ -14,15 +19,22 @@ void main() {
       email: 'user@example.com',
     );
 
-    Future<void> pumpHomePage(WidgetTester tester) {
-      return tester.pumpWidget(
+    Future<void> pumpHomePage(WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues(const {});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
             authStateProvider.overrideWith(
                   (ref) => Stream.value(user),
             ),
             userChatsProvider(user.id).overrideWith(
                   (ref) => Stream.value([]),
+            ),
+            profileRepositoryProvider.overrideWithValue(
+              FakeProfileRepository(),
             ),
           ],
           child: const MaterialApp(
