@@ -33,7 +33,6 @@ class AppStrings {
   String get joinedGroups =>
       isFrench ? 'Groupes rejoints' : 'Joined Groups';
   String get aboutApp => isFrench ? 'À propos' : 'About App';
-  String get replayIntro => isFrench ? 'Revoir l\'intro' : 'Replay intro';
   String get logout => isFrench ? 'Déconnexion' : 'Logout';
 
   // —— Common ——
@@ -86,6 +85,9 @@ class AppStrings {
   String get invalidEmail => isFrench
       ? 'Veuillez entrer une adresse email valide.'
       : 'Please enter a valid email address.';
+  String get emailNotAllowed => isFrench
+      ? 'Cet email n\'est pas autorisé (évitez test@, demo@, etc.). Utilisez une adresse réelle.'
+      : 'This email is not allowed (avoid test@, demo@, etc.). Use a real address.';
   String get passwordMinLength => isFrench
       ? 'Minimum 6 caractères.'
       : 'At least 6 characters.';
@@ -96,11 +98,11 @@ class AppStrings {
       ? 'Les mots de passe ne correspondent pas.'
       : 'Passwords do not match.';
   String get authUserNotFound => isFrench
-      ? 'Aucun compte associé à cet email.'
-      : 'No account found for this email.';
+      ? 'Aucun compte associé à cet email. Créez un compte pour continuer.'
+      : 'No account found for this email. Create an account to continue.';
   String get authWrongCredentials => isFrench
-      ? 'Email ou mot de passe incorrect.'
-      : 'Incorrect email or password.';
+      ? 'Email ou mot de passe incorrect. Vérifiez vos identifiants ou créez un compte.'
+      : 'Incorrect email or password. Check your credentials or create an account.';
   String get authTooManyRequests => isFrench
       ? 'Trop de tentatives. Réessayez plus tard.'
       : 'Too many attempts. Try again later.';

@@ -23,6 +23,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  String? _emailServerError;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,11 +34,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Future<void> _register() async {
+    setState(() => _emailServerError = null);
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
 
-    await ref.read(authControllerProvider.notifier).register(
+    await ref
+        .read(authControllerProvider.notifier)
+        .register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
@@ -53,32 +58,53 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         }
       },
       error: (error, _) {
+        final message = error is String ? error : _getErrorMessage(error, s);
+        final emailRelated = _isEmailRelatedError(message, s);
+
+        setState(() {
+          _emailServerError = emailRelated ? message : null;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_getErrorMessage(error, s)),
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
         );
       },
     );
   }
 
+  bool _isEmailRelatedError(String message, AppStrings s) {
+    final lower = message.toLowerCase();
+    return lower.contains('déjà utilisée') ||
+        lower.contains('already') ||
+        lower.contains('invalide') ||
+        lower.contains('invalid') ||
+        message == s.authEmailInUse ||
+        message == s.invalidEmail;
+  }
+
   String _getErrorMessage(Object error, AppStrings s) {
     final message = error.toString().toLowerCase();
 
-    if (message.contains('email-already-in-use')) {
+    if (message.contains('email-already-in-use') ||
+        message.contains('déjà utilisée')) {
       return s.authEmailInUse;
     }
 
-    if (message.contains('invalid-email')) {
+    if (message.contains('invalid-email') || message.contains('invalide')) {
       return s.invalidEmail;
     }
 
-    if (message.contains('weak-password')) {
+    if (message.contains('weak-password') || message.contains('faible')) {
       return s.authWeakPassword;
     }
 
     return s.registerFailed;
+  }
+
+  String? _validateEmail(String? value, AppStrings s) {
+    final formatError = validateEmail(value, s);
+    if (formatError != null) return formatError;
+    return _emailServerError;
   }
 
   String? _validatePassword(String? value, AppStrings s) {
@@ -115,14 +141,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 32,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
               child: Form(
                 key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -158,6 +182,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autocorrect: false,
+                      onChanged: (_) {
+                        if (_emailServerError != null) {
+                          setState(() => _emailServerError = null);
+                        }
+                      },
                       decoration: InputDecoration(
                         labelText: s.email,
                         hintText: s.emailHint,
@@ -166,7 +195,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: (v) => validateEmail(v, s),
+                      validator: (v) => _validateEmail(v, s),
                     ),
                     const SizedBox(height: 18),
                     TextFormField(
@@ -265,18 +294,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         Text(
                           s.alreadyHaveAccount,
                           style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         TextButton(
-                          onPressed:
-                              isLoading ? null : () => context.go('/login'),
+                          onPressed: isLoading
+                              ? null
+                              : () => context.go('/login'),
                           child: Text(
                             s.signIn,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],

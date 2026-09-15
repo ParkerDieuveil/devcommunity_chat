@@ -64,7 +64,7 @@ void main() {
 
       await tester.enterText(
         find.byType(TextFormField).at(0),
-        'test@example.com',
+        'marie.dupont@gmail.com',
       );
 
       await tester.tap(find.text('Se connecter'));

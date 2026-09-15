@@ -52,7 +52,7 @@ void main() {
 
       final fields = find.byType(TextFormField);
 
-      await tester.enterText(fields.at(0), 'test@example.com');
+      await tester.enterText(fields.at(0), 'marie.dupont@gmail.com');
       await tester.enterText(fields.at(1), '123');
 
       await tester.tap(find.text('Créer mon compte'));
@@ -66,7 +66,7 @@ void main() {
 
       final fields = find.byType(TextFormField);
 
-      await tester.enterText(fields.at(0), 'test@example.com');
+      await tester.enterText(fields.at(0), 'marie.dupont@gmail.com');
       await tester.enterText(fields.at(1), 'password123');
       await tester.enterText(fields.at(2), 'different123');
 
@@ -75,6 +75,23 @@ void main() {
 
       expect(
         find.text('Les mots de passe ne correspondent pas.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('refuse un email de test', (tester) async {
+      await pumpRegisterPage(tester);
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'test@gmail.com');
+      await tester.enterText(fields.at(1), 'password123');
+      await tester.enterText(fields.at(2), 'password123');
+
+      await tester.tap(find.text('Créer mon compte'));
+      await tester.pump();
+
+      expect(
+        find.textContaining('n\'est pas autorisé'),
         findsOneWidget,
       );
     });

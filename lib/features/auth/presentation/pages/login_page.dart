@@ -52,7 +52,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       error: (error, _) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_getErrorMessage(error, s)),
+            // AuthController renvoie déjà un message utilisateur (String).
+            content: Text(error is String ? error : _getErrorMessage(error, s)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -63,16 +64,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String _getErrorMessage(Object error, AppStrings s) {
     final message = error.toString().toLowerCase();
 
-    if (message.contains('user-not-found')) {
+    if (message.contains('user-not-found') ||
+        message.contains('aucun compte')) {
       return s.authUserNotFound;
     }
 
     if (message.contains('wrong-password') ||
-        message.contains('invalid-credential')) {
+        message.contains('invalid-credential') ||
+        message.contains('incorrect')) {
       return s.authWrongCredentials;
     }
 
-    if (message.contains('invalid-email')) {
+    if (message.contains('invalid-email') || message.contains('invalide')) {
       return s.invalidEmail;
     }
 
@@ -87,7 +90,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (value == null || value.isEmpty) {
       return s.passwordRequired;
     }
-
+    if (value.length < 6) {
+      return s.passwordMinLength;
+    }
     return null;
   }
 
@@ -109,6 +114,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               constraints: const BoxConstraints(maxWidth: 430),
               child: Form(
                 key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
