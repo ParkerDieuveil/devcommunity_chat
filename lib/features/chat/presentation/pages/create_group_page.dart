@@ -5,13 +5,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/locale/app_strings.dart';
 import '../../../../core/router/app_route_path.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_secondary_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/chat_provider.dart';
-
-const _headerBlue = Color(0xFF1565C0);
-const _accentBlue = Color(0xFF03A9F4);
+import '../utils/chat_display.dart';
+import '../widgets/add_members_sheet.dart';
 
 class CreateGroupPage extends ConsumerStatefulWidget {
   const CreateGroupPage({super.key});
@@ -41,7 +42,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        return _AddMembersSheet(
+        return AddMembersSheet(
           candidates: candidates,
           initiallySelectedIds: _selectedById.keys.toSet(),
           strings: s,
@@ -106,37 +107,9 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          ColoredBox(
-            color: _headerBlue,
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white24,
-                      ),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    ),
-                    Expanded(
-                      child: Text(
-                        s.createGroup,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-            ),
+          AppSecondaryHeader(
+            title: s.createGroup,
+            onBack: () => context.pop(),
           ),
           Expanded(
             child: profilesAsync.when(
@@ -173,7 +146,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                       ),
                       const SizedBox(height: 8),
                       Material(
-                        color: const Color(0xFFE3F2FD),
+                        color: AppColors.brandSurfaceAlt,
                         borderRadius: BorderRadius.circular(12),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
@@ -194,7 +167,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                                 Text(
                                   s.addMembers,
                                   style: const TextStyle(
-                                    color: _accentBlue,
+                                    color: AppColors.brand,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -219,20 +192,20 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                                 itemBuilder: (context, index) {
                                   final profile =
                                       _selectedById.values.elementAt(index);
-                                  final name = profile.displayname.trim().isEmpty
-                                      ? profile.email
-                                      : profile.displayname;
+                                  final name =
+                                      profile.displayname.trim().isEmpty
+                                          ? profile.email
+                                          : profile.displayname;
                                   return ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     leading: CircleAvatar(
-                                      backgroundImage: profile
-                                              .photoUrl
+                                      backgroundImage: profile.photoUrl
                                               .trim()
                                               .isNotEmpty
                                           ? NetworkImage(profile.photoUrl)
                                           : null,
                                       child: profile.photoUrl.trim().isEmpty
-                                          ? Text(name[0].toUpperCase())
+                                          ? Text(nameInitial(name))
                                           : null,
                                     ),
                                     title: Text(name),
@@ -240,12 +213,13 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                                     trailing: IconButton(
                                       onPressed: () {
                                         setState(
-                                          () => _selectedById.remove(profile.id),
+                                          () =>
+                                              _selectedById.remove(profile.id),
                                         );
                                       },
                                       icon: const Icon(
                                         Icons.close,
-                                        color: Color(0xFFE53935),
+                                        color: AppColors.danger,
                                       ),
                                     ),
                                   );
@@ -258,7 +232,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                         child: FilledButton(
                           onPressed: _creating ? null : _createGroup,
                           style: FilledButton.styleFrom(
-                            backgroundColor: _accentBlue,
+                            backgroundColor: AppColors.brand,
                             shape: const StadiumBorder(),
                           ),
                           child: _creating
@@ -286,167 +260,6 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AddMembersSheet extends StatefulWidget {
-  const _AddMembersSheet({
-    required this.candidates,
-    required this.initiallySelectedIds,
-    required this.strings,
-  });
-
-  final List<ProfileEntity> candidates;
-  final Set<String> initiallySelectedIds;
-  final AppStrings strings;
-
-  @override
-  State<_AddMembersSheet> createState() => _AddMembersSheetState();
-}
-
-class _AddMembersSheetState extends State<_AddMembersSheet> {
-  late final Set<String> _selectedIds;
-  final _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIds = {...widget.initiallySelectedIds};
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = widget.strings;
-    final query = _searchController.text.trim().toLowerCase();
-    final filtered = widget.candidates.where((p) {
-      if (query.isEmpty) return true;
-      return p.email.toLowerCase().contains(query) ||
-          p.displayname.toLowerCase().contains(query);
-    }).toList();
-
-    final height = MediaQuery.sizeOf(context).height * 0.75;
-
-    return SizedBox(
-      height: height,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        child: Column(
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFBDBDBD),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Text(
-              s.addMembers,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: s.searchByEmail,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: SvgPicture.asset(
-                        'assets/logo/Card Search.svg',
-                        width: 160,
-                        height: 160,
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final profile = filtered[index];
-                        final selected = _selectedIds.contains(profile.id);
-                        final name = profile.displayname.trim().isEmpty
-                            ? profile.email
-                            : profile.displayname;
-                        return CheckboxListTile(
-                          value: selected,
-                          activeColor: _accentBlue,
-                          controlAffinity: ListTileControlAffinity.trailing,
-                          secondary: CircleAvatar(
-                            backgroundImage: profile.photoUrl.trim().isNotEmpty
-                                ? NetworkImage(profile.photoUrl)
-                                : null,
-                            child: profile.photoUrl.trim().isEmpty
-                                ? Text(name[0].toUpperCase())
-                                : null,
-                          ),
-                          title: Text(
-                            name,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(profile.email),
-                          onChanged: (value) {
-                            setState(() {
-                              if (value == true) {
-                                _selectedIds.add(profile.id);
-                              } else {
-                                _selectedIds.remove(profile.id);
-                              }
-                            });
-                          },
-                        );
-                      },
-                    ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFE3F2FD),
-                      foregroundColor: _headerBlue,
-                      shape: const StadiumBorder(),
-                    ),
-                    child: Text(s.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      final selected = <String, ProfileEntity>{
-                        for (final p in widget.candidates)
-                          if (_selectedIds.contains(p.id)) p.id: p,
-                      };
-                      Navigator.pop(context, selected);
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _accentBlue,
-                      shape: const StadiumBorder(),
-                    ),
-                    child: Text(s.add),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/locale/app_strings.dart';
 import '../../../../core/router/app_route_path.dart';
+import '../../../../core/widgets/app_secondary_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/chat_provider.dart';
-
-const _headerBlue = Color(0xFF1565C0);
+import '../widgets/chat_list_tile.dart';
+import '../widgets/user_contact_tile.dart';
 
 /// Recherche d'un contact par email (ou nom) pour démarrer un chat 1:1.
 class NewChatPage extends ConsumerStatefulWidget {
@@ -88,37 +88,9 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          ColoredBox(
-            color: _headerBlue,
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white24,
-                      ),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    ),
-                    Expanded(
-                      child: Text(
-                        s.addContact,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-            ),
+          AppSecondaryHeader(
+            title: s.addContact,
+            onBack: () => context.pop(),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -155,26 +127,9 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
               ),
               data: (profiles) {
                 if (_searchQuery.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/logo/Card Search.svg',
-                            width: 220,
-                            height: 220,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            s.searchEmailPrompt,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return SearchEmptyIllustration(
+                    message: s.searchEmailPrompt,
+                    size: 220,
                   );
                 }
 
@@ -184,26 +139,8 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
                     .toList();
 
                 if (users.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/logo/Card Search.svg',
-                            width: 180,
-                            height: 180,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            s.noUsersFound(_searchQuery),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return SearchEmptyIllustration(
+                    message: s.noUsersFound(_searchQuery),
                   );
                 }
 
@@ -213,7 +150,7 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final profile = users[index];
-                    return _UserTile(
+                    return UserContactTile(
                       displayName: profile.displayname,
                       email: profile.email,
                       photoUrl: profile.photoUrl,
@@ -229,76 +166,5 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
         ],
       ),
     );
-  }
-}
-
-class _UserTile extends StatelessWidget {
-  const _UserTile({
-    required this.displayName,
-    required this.email,
-    required this.photoUrl,
-    required this.loading,
-    required this.startChatTooltip,
-    required this.onTap,
-  });
-
-  final String displayName;
-  final String email;
-  final String photoUrl;
-  final bool loading;
-  final String startChatTooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final name = displayName.trim().isEmpty ? email : displayName;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundImage:
-            photoUrl.trim().isNotEmpty ? NetworkImage(photoUrl) : null,
-        child: photoUrl.trim().isEmpty
-            ? Text(
-                _initial(name),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
-            : null,
-      ),
-      title: Text(
-        name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        email,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: loading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : IconButton(
-              onPressed: onTap,
-              tooltip: startChatTooltip,
-              icon: SvgPicture.asset(
-                'assets/logo/User Plus.svg',
-                width: 24,
-                height: 24,
-              ),
-            ),
-      onTap: loading ? null : onTap,
-    );
-  }
-
-  String _initial(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return '?';
-    return trimmed[0].toUpperCase();
   }
 }
