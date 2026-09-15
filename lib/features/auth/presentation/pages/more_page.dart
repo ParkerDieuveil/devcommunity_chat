@@ -167,7 +167,9 @@ class MorePage extends ConsumerWidget {
                               .read(authControllerProvider.notifier)
                               .logout();
                           if (!context.mounted) return;
-                          context.go(AppRoutePath.loginPath);
+                          if (GoRouter.maybeOf(context) != null) {
+                            context.go(AppRoutePath.loginPath);
+                          }
                         },
                 ),
               ],

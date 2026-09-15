@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/core/router/app_route_path.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
@@ -13,6 +14,7 @@ import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
 import 'package:devcommunitychat/features/profile/presentation/providers/profile_provider.dart';
 
 import '../../fakes/fake_chat_repository.dart';
+import '../../../../helpers/test_prefs.dart';
 
 const _user = AppUser(
   id: 'user-1',
@@ -27,7 +29,8 @@ void main() {
       fakeRepository = FakeChatRepository();
     });
 
-    Future<void> pumpPage(WidgetTester tester) {
+    Future<void> pumpPage(WidgetTester tester) async {
+      final prefs = await mockSharedPreferences();
       final router = GoRouter(
         initialLocation: AppRoutePath.chatsPath,
         routes: [
@@ -46,9 +49,10 @@ void main() {
         ],
       );
 
-      return tester.pumpWidget(
+      await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
             authStateProvider.overrideWith(
               (ref) => Stream.value(_user),
             ),

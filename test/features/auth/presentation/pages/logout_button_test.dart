@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
@@ -12,13 +11,9 @@ import 'package:devcommunitychat/features/chat/presentation/providers/chat_provi
 import 'package:devcommunitychat/features/profile/presentation/pages/profile_page.dart';
 
 import '../../fakes/fake_auth_repository.dart';
+import '../../../../helpers/test_prefs.dart';
 
 const _user = AppUser(id: 'u1', email: 'user@example.com');
-
-Future<SharedPreferences> _prefs() async {
-  SharedPreferences.setMockInitialValues({});
-  return SharedPreferences.getInstance();
-}
 
 void main() {
   group('Bouton de déconnexion', () {
@@ -27,7 +22,7 @@ void main() {
     ) async {
       final fakeRepository = FakeAuthRepository();
       addTearDown(fakeRepository.dispose);
-      final prefs = await _prefs();
+      final prefs = await mockSharedPreferences();
 
       await tester.pumpWidget(
         ProviderScope(
@@ -42,13 +37,13 @@ void main() {
           child: const MaterialApp(home: HomePage()),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Profil'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Déconnexion'));
-      await tester.tap(find.text('Déconnexion'));
+      await tester.ensureVisible(find.text('Déconnexion').first);
+      await tester.tap(find.text('Déconnexion').first);
       await tester.pump();
       await tester.pump();
 
@@ -58,7 +53,7 @@ void main() {
     testWidgets('depuis ProfilePage, déclenche LogoutUseCase', (tester) async {
       final fakeRepository = FakeAuthRepository();
       addTearDown(fakeRepository.dispose);
-      final prefs = await _prefs();
+      final prefs = await mockSharedPreferences();
 
       await tester.pumpWidget(
         ProviderScope(
@@ -74,10 +69,10 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Déconnexion'));
-      await tester.tap(find.text('Déconnexion'));
+      await tester.ensureVisible(find.text('Déconnexion').first);
+      await tester.tap(find.text('Déconnexion').first);
       await tester.pump();
       await tester.pump();
 

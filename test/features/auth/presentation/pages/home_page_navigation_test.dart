@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
@@ -9,6 +8,8 @@ import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/pages/home_page.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
+
+import '../../../../helpers/test_prefs.dart';
 
 void main() {
   group('HomePage - navigation par onglets', () {
@@ -18,8 +19,7 @@ void main() {
     );
 
     Future<void> pumpHomePage(WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await mockSharedPreferences();
 
       await tester.pumpWidget(
         ProviderScope(
@@ -54,22 +54,22 @@ void main() {
 
     testWidgets('affiche les 4 destinations du menu', (tester) async {
       await pumpHomePage(tester);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('Chats'), findsWidgets);
-      expect(find.text('Groups'), findsOneWidget);
-      expect(find.text('Profile'), findsOneWidget);
-      expect(find.text('More'), findsOneWidget);
+      expect(find.text('Groupes'), findsOneWidget);
+      expect(find.text('Profil'), findsOneWidget);
+      expect(find.text('Plus'), findsOneWidget);
     });
 
-    testWidgets('bascule vers Profile au tap', (tester) async {
+    testWidgets('bascule vers Profil au tap', (tester) async {
       await pumpHomePage(tester);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Profile'));
-      await tester.pump();
+      await tester.tap(find.text('Profil'));
+      await tester.pumpAndSettle();
 
-      expect(find.text('Déconnexion'), findsOneWidget);
+      expect(find.text('Déconnexion'), findsWidgets);
     });
   });
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/domain/entities/message_entity.dart';
@@ -9,6 +11,7 @@ import 'package:devcommunitychat/features/chat/presentation/pages/chat_messages_
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
 
 import '../../fakes/fake_chat_repository.dart';
+import '../../../../helpers/test_prefs.dart';
 
 const _user = AppUser(id: 'user-1', email: 'user@example.com');
 
@@ -20,10 +23,12 @@ void main() {
       fakeRepository = FakeChatRepository();
     });
 
-    Future<void> pumpPage(WidgetTester tester) {
-      return tester.pumpWidget(
+    Future<void> pumpPage(WidgetTester tester) async {
+      final prefs = await mockSharedPreferences();
+      await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
             authStateProvider.overrideWith((ref) => Stream.value(_user)),
             chatRepositoryProvider.overrideWithValue(fakeRepository),
           ],
@@ -34,17 +39,27 @@ void main() {
       );
     }
 
-    testWidgets('affiche un loader puis "Aucun message" si le chat est vide', (
-      tester,
-    ) async {
-      await pumpPage(tester);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    Future<void> tapSend(WidgetTester tester) async {
+      final sendButton = find.byType(SvgPicture);
+      if (sendButton.evaluate().isNotEmpty) {
+        await tester.tap(sendButton.last);
+      } else {
+        await tester.testTextInput.receiveAction(TextInputAction.send);
+      }
+    }
 
-      fakeRepository.emitMessages([]);
-      await tester.pump();
+    testWidgets(
+      'affiche un loader puis empty state si le chat est vide',
+      (tester) async {
+        await pumpPage(tester);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      expect(find.text('Aucun message'), findsOneWidget);
-    });
+        fakeRepository.emitMessages([]);
+        await tester.pump();
+
+        expect(find.text('Envoyez le premier message'), findsOneWidget);
+      },
+    );
 
     testWidgets('affiche les messages reçus en temps réel', (tester) async {
       await pumpPage(tester);
@@ -76,7 +91,7 @@ void main() {
         await tester.pump();
 
         await tester.enterText(find.byType(TextField), 'Ca avance bien');
-        await tester.tap(find.byIcon(Icons.send));
+        await tapSend(tester);
         await tester.pump();
         await tester.pump();
 
@@ -101,7 +116,7 @@ void main() {
       await tester.pump();
 
       await tester.enterText(find.byType(TextField), 'Ca ne va pas passer');
-      await tester.tap(find.byIcon(Icons.send));
+      await tapSend(tester);
       await tester.pump();
       await tester.pump();
 

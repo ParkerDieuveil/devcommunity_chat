@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
@@ -10,11 +9,12 @@ import 'package:devcommunitychat/features/auth/presentation/pages/home_page.dart
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
 
+import '../../../../helpers/test_prefs.dart';
+
 void main() {
-  testWidgets('HomePage démarre sur Discussions', (tester) async {
+  testWidgets('HomePage démarre sur Chats', (tester) async {
     const user = AppUser(id: 'u1', email: 'user@example.com');
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await mockSharedPreferences();
 
     await tester.pumpWidget(
       ProviderScope(
@@ -32,6 +32,6 @@ void main() {
       tester.element(find.byType(HomePage)),
     );
     expect(container.read(mainTabProvider), MainTab.chat);
-    expect(find.text('Discussions'), findsWidgets);
+    expect(find.text('Chats'), findsWidgets);
   });
 }
