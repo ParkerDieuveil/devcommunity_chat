@@ -18,5 +18,8 @@ abstract class ChatRepository {
     required String chatId,
     required String userId,
   });
-  Future<String> createChat(List<String> participantIds);
+  Future<String> createChat(
+    List<String> participantIds, {
+    String? name,
+  });
 }

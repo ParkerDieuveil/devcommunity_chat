@@ -90,8 +90,9 @@ class FakeChatRepository implements ChatRepository {
 
   @override
   Future<String> createChat(
-      List<String> participantIds,
-      ) async {
+    List<String> participantIds, {
+    String? name,
+  }) async {
     return createChatResult;
   }
 

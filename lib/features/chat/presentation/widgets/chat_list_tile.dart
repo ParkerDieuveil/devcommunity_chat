@@ -18,6 +18,8 @@ class ChatListTile extends StatelessWidget {
     required this.userFallback,
     required this.groupFallback,
     required this.noMessagePreview,
+    this.yesterdayLabel = 'Yesterday',
+    this.weekdayLabels,
     this.leadingIsGroup = false,
   });
 
@@ -26,17 +28,24 @@ class ChatListTile extends StatelessWidget {
   final String userFallback;
   final String groupFallback;
   final String noMessagePreview;
+  final String yesterdayLabel;
+  final List<String>? weekdayLabels;
   final bool leadingIsGroup;
 
   @override
   Widget build(BuildContext context) {
     final displayName = chatDisplayTitle(
       others,
+      chatName: chat.name,
       emptyFallback:
           chat.participantIds.length > 2 ? groupFallback : userFallback,
       multiFallback: groupFallback,
     );
-    final timeLabel = formatChatTimestamp(chat.lastMessageAt);
+    final timeLabel = formatChatTimestamp(
+      chat.lastMessageAt,
+      yesterdayLabel: yesterdayLabel,
+      weekdayLabels: weekdayLabels,
+    );
     final photoUrl = others.length == 1 ? others.first.photoUrl : '';
     final preview = chat.lastMessage ?? noMessagePreview;
     final colors = Theme.of(context).colorScheme;

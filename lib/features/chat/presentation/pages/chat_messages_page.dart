@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/locale/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
@@ -168,14 +169,6 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     }
   }
 
-  void _showComingSoon(String label) {
-    final s = ref.read(appStringsProvider);
-    setState(() => _attachmentsOpen = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label — ${s.comingSoon}')),
-    );
-  }
-
   String _subtitleFor(List<ProfileEntity> others, AppStrings s) {
     if (others.isEmpty) return '';
     if (others.length == 1) return others.first.email;
@@ -211,6 +204,10 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
 
     final title = chatDisplayTitle(
       others,
+      chatName: chatAsync.maybeWhen(
+        data: (chat) => chat?.name,
+        orElse: () => null,
+      ),
       emptyFallback: s.userFallback,
       multiFallback: s.groupFallback,
     );
@@ -220,7 +217,7 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final chatBg =
-        isDark ? const Color(0xFF0F1520) : const Color(0xFFF5F7FA);
+        isDark ? AppColors.chatCanvasDark : AppColors.chatCanvasLight;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -281,16 +278,10 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
               enabled: !_sending,
               cameraLabel: s.attachCamera,
               recordLabel: s.attachRecord,
-              contactLabel: s.attachContact,
               galleryLabel: s.attachGallery,
-              locationLabel: s.attachLocation,
-              documentLabel: s.attachDocument,
               onCamera: () => _sendImage(ChatMediaPickSource.camera),
               onRecord: _openVoiceRecorder,
-              onContact: () => _showComingSoon(s.attachContact),
               onGallery: () => _sendImage(ChatMediaPickSource.gallery),
-              onLocation: () => _showComingSoon(s.attachLocation),
-              onDocument: () => _showComingSoon(s.attachDocument),
             ),
           ChatMessageInputBar(
             controller: _controller,

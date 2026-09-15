@@ -64,6 +64,14 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
     final s = ref.read(appStringsProvider);
     if (user == null || _creating) return;
 
+    final groupName = _nameController.text.trim();
+    if (groupName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.groupNameRequired)),
+      );
+      return;
+    }
+
     if (_selectedById.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(s.groupMinMembers)),
@@ -77,14 +85,16 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
         user.id,
         ..._selectedById.keys,
       ];
-      final chatId =
-          await ref.read(createChatUseCaseProvider).call(participantIds);
+      final chatId = await ref.read(createChatUseCaseProvider).call(
+            participantIds,
+            name: groupName,
+          );
       if (!mounted) return;
       context.push(AppRoutePath.chatDetail(chatId));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Impossible de créer le groupe : $error')),
+        SnackBar(content: Text('${s.createGroupFailed} : $error')),
       );
     } finally {
       if (mounted) setState(() => _creating = false);
@@ -127,7 +137,9 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                     children: [
                       Text(
                         s.groupNameLabel,
-                        style: const TextStyle(color: Color(0xFF9E9E9E)),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
@@ -142,7 +154,9 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                       const SizedBox(height: 20),
                       Text(
                         s.membersLabel,
-                        style: const TextStyle(color: Color(0xFF9E9E9E)),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Material(
@@ -182,7 +196,11 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                             ? Center(
                                 child: Text(
                                   s.noMembersSelected,
-                                  style: TextStyle(color: Colors.grey.shade600),
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                                 ),
                               )
                             : ListView.separated(

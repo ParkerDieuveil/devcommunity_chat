@@ -17,7 +17,10 @@ abstract class ChatRemoteDataSource {
     String? audioUrl,
   });
 
-  Future<String> createChat(List<String> participantIds);
+  Future<String> createChat(
+    List<String> participantIds, {
+    String? name,
+  });
 
   Future<void> markMessagesAsRead({
     required String chatId,
@@ -143,26 +146,33 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<String> createChat(
-      List<String> participantIds,
-      ) async {
+    List<String> participantIds, {
+    String? name,
+  }) async {
     final sortedIds = [...participantIds]..sort();
+    final trimmedName = name?.trim();
+    final hasName = trimmedName != null && trimmedName.isNotEmpty;
 
-    final existing = await _chats
-        .where(
-      'participantIds',
-      isEqualTo: sortedIds,
-    )
-        .limit(1)
-        .get();
+    // 1-1 : réutiliser un chat existant. Groupes nommés : toujours créer.
+    if (!hasName) {
+      final existing = await _chats
+          .where(
+            'participantIds',
+            isEqualTo: sortedIds,
+          )
+          .limit(1)
+          .get();
 
-    if (existing.docs.isNotEmpty) {
-      return existing.docs.first.id;
+      if (existing.docs.isNotEmpty) {
+        return existing.docs.first.id;
+      }
     }
 
     final docRef = _chats.doc();
 
     await docRef.set({
       'participantIds': sortedIds,
+      if (hasName) 'name': trimmedName,
       'lastMessage': null,
       'lastMessageSenderId': null,
       'lastMessageAt': FieldValue.serverTimestamp(),

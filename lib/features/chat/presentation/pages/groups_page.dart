@@ -83,6 +83,8 @@ class GroupsPage extends ConsumerWidget {
                           userFallback: s.groupFallback,
                           groupFallback: s.groupFallback,
                           noMessagePreview: s.noMessagePreview,
+                          yesterdayLabel: s.yesterday,
+                          weekdayLabels: s.weekdayShort,
                           leadingIsGroup: true,
                         );
                       },

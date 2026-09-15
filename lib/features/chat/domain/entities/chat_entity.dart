@@ -1,6 +1,7 @@
 class ChatEntity {
   final String chatId;
   final List<String> participantIds;
+  final String? name;
   final String? lastMessage;
   final String? lastMessageSenderId;
   final DateTime? lastMessageAt;
@@ -9,6 +10,7 @@ class ChatEntity {
   const ChatEntity({
     required this.chatId,
     required this.participantIds,
+    this.name,
     this.lastMessage,
     this.lastMessageSenderId,
     this.lastMessageAt,

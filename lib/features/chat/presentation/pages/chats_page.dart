@@ -122,6 +122,7 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
                       );
                       final name = chatDisplayTitle(
                         other,
+                        chatName: chat.name,
                         emptyFallback: chat.participantIds.length > 2
                             ? s.groupFallback
                             : s.userFallback,
@@ -150,6 +151,8 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
                           userFallback: s.userFallback,
                           groupFallback: s.groupFallback,
                           noMessagePreview: s.noMessagePreview,
+                          yesterdayLabel: s.yesterday,
+                          weekdayLabels: s.weekdayShort,
                         );
                       },
                     );

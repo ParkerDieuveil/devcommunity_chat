@@ -6,6 +6,7 @@ class ChatModel extends ChatEntity {
   const ChatModel({
     required super.chatId,
     required super.participantIds,
+    super.name,
     super.lastMessage,
     super.lastMessageSenderId,
     super.lastMessageAt,
@@ -18,6 +19,7 @@ class ChatModel extends ChatEntity {
     return ChatModel(
       chatId: doc.id,
       participantIds: List<String>.from(data['participantIds'] ?? const []),
+      name: data['name'] as String?,
       lastMessage: data['lastMessage'] as String?,
       lastMessageSenderId: data['lastMessageSenderId'] as String?,
       lastMessageAt: _readDateTime(data['lastMessageAt']),
@@ -28,6 +30,7 @@ class ChatModel extends ChatEntity {
   Map<String, dynamic> toMap() {
     return {
       'participantIds': participantIds,
+      if (name != null) 'name': name,
       'lastMessage': lastMessage,
       'lastMessageSenderId': lastMessageSenderId,
       'lastMessageAt': lastMessageAt != null

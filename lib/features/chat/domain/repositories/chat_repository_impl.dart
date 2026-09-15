@@ -69,9 +69,15 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<String> createChat(List<String> participantIds) async {
+  Future<String> createChat(
+    List<String> participantIds, {
+    String? name,
+  }) async {
     try {
-      return await remoteDataSource.createChat(participantIds);
+      return await remoteDataSource.createChat(
+        participantIds,
+        name: name,
+      );
     } catch (error) {
       throw _wrap(error, 'Impossible de créer la conversation.');
     }

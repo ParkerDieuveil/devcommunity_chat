@@ -22,9 +22,13 @@ List<ProfileEntity> findOtherProfiles({
 /// Titre affiché pour une conversation (1-1 ou groupe).
 String chatDisplayTitle(
   List<ProfileEntity> others, {
+  String? chatName,
   required String emptyFallback,
   required String multiFallback,
 }) {
+  final named = chatName?.trim();
+  if (named != null && named.isNotEmpty) return named;
+
   if (others.isEmpty) return emptyFallback;
   if (others.length == 1) {
     final name = others.first.displayname.trim();
