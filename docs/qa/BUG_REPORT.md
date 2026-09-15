@@ -14,6 +14,7 @@ Aucun bug bloquant identifié à ce jour.
 
 ## ⚠️ Point d'architecture à corriger avant ce soir
 
+<<<<<<< HEAD
 1. **Le tab "Chat" de la navigation principale n'est pas branché sur Firestore** — `HomePage` affiche `ChatPage`, qui utilise un `ChatNotifier` **local en mémoire** (`lib/features/chat/presentation/pages/chat_provider.dart`), au lieu de la vraie implémentation Firestore Clean Architecture (`ChatsPage`/`ChatMessagesPage`, `lib/features/chat/presentation/providers/chat_provider.dart`, qui passe par `ChatRepository` → `ChatRemoteDataSource` → Firestore, comme prévu dans le compte-rendu d'architecture du groupe).
    - **Conséquence** : un message envoyé depuis l'onglet "Chat" de la navigation principale n'est ni persisté ni synchronisé entre utilisateurs — c'est un chat factice, local à l'appareil.
    - **Ce qu'il manque pour respecter l'architecture prévue** : dans `HomePage`, remplacer `ChatPage` (chat local) par le vrai flux `ChatsPage` → `ChatMessagesPage` (liste de conversations réelles, sélection d'une conversation, puis messages Firestore en temps réel). Actuellement les deux systèmes coexistent en parallèle dans le code.
@@ -27,3 +28,13 @@ Aucun bug bloquant identifié à ce jour.
 ## Suivi
 
 Déconnexion, modification de profil, et chat Firestore (liste, envoi, réception temps réel) sont désormais testés grâce à des fakes en mémoire (`FakeAuthRepository`, `FakeProfileRepository`, `FakeChatRepository`) qui implémentent directement les interfaces du domaine — pas besoin d'ajouter `mocktail`. Les vrais appels Firebase Auth sont couverts par un test d'intégration existant (à exécuter en local/CI). **Reste à traiter avant ce soir** : brancher le tab Chat de la navigation principale sur la vraie implémentation Firestore (seul point qui s'écarte de l'architecture Clean Architecture définie en réunion d'équipe).
+=======
+1. ~~**Le tab "Chat" de la navigation principale n'est pas branché sur Firestore**~~ — **Résolu** (PR #22 : `HomePage` → `ChatsPage`). Code mort associé (`ChatPage` / `ChatNotifier` mémoire) retiré dans `chore/remove-dead-chat-notifier`.
+2. **Modification de profil non testée en profondeur** — l'ouverture et le pré-remplissage de la boîte de dialogue sont testés, mais pas l'appel réel à `UpdateProfile` → Firestore.
+3. **Pas de test sur les appels Firebase réels** (login/register/logout) — seules la logique métier (via fakes) et les validations de formulaire côté UI sont testées, pas l'intégration avec `FirebaseAuth`/Firestore eux-mêmes.
+4. **`ProfileEntity`/`GetProfile` non utilisés** — le domaine `profile` définit une entité et un usecase `GetProfile` distincts de `AppUser`, mais `ProfilePage` n'utilise que `AppUser` (via `authStateProvider`) ; `GetProfile` semble mort. À clarifier avec l'auteur (Hien) — fusion prévue avec `AppUser` ou usage futur ?
+
+## Suivi
+
+Déconnexion, chat Firestore (liste, envoi, réception temps réel) sont testés via fakes. Tab Chat branché Firestore. Reste : tests profil → Firestore en profondeur, IT Firebase.
+>>>>>>> develop

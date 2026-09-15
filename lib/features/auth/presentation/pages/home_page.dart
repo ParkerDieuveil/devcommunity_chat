@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_controller.dart';
 import 'package:devcommunitychat/core/router/navigation_provider.dart';
-import '../../../chat/presentation/pages/chat_page.dart';
+import '../../../chat/presentation/pages/chats_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import 'home_content.dart';
 
@@ -17,7 +17,11 @@ class HomePage extends ConsumerWidget {
     final selectedTab = ref.watch(mainTabProvider);
     final selectedIndex = selectedTab.index;
 
-    const pages = [HomeContent(), ChatPage(), ProfilePage()];
+    const pages = [
+      HomeContent(),
+      ChatsPage(),
+      ProfilePage(),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -27,18 +31,25 @@ class HomePage extends ConsumerWidget {
             onPressed: actionState.isLoading
                 ? null
                 : () {
-                    ref.read(authControllerProvider.notifier).logout();
-                  },
+              ref
+                  .read(authControllerProvider.notifier)
+                  .logout();
+            },
             icon: const Icon(Icons.logout),
             tooltip: 'Déconnexion',
           ),
         ],
       ),
-      body: IndexedStack(index: selectedIndex, children: pages),
+      body: IndexedStack(
+        index: selectedIndex,
+        children: pages,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          ref.read(mainTabProvider.notifier).selectTab(MainTab.values[index]);
+          ref
+              .read(mainTabProvider.notifier)
+              .selectTab(MainTab.values[index]);
         },
         destinations: const [
           NavigationDestination(

@@ -21,9 +21,9 @@ Ce qui est livré :
 
 Ce qui n’est pas livré :
 
-- écrans liste de chats / conversation
-- upload d’images (Storage) ; le modèle accepte déjà `imageUrl`
 - présence “online” branchée sur le logout (la méthode `setUserOffline` existe côté repo)
+
+Upload d’images chat : voir `SendChatImageUseCase` + `storage.rules` (`chats/{chatId}/images/...`).
 
 ---
 

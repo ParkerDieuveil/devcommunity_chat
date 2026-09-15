@@ -10,6 +10,7 @@ import '../../features/chat/presentation/pages/chat_messages_page.dart';
 import '../../features/chat/presentation/pages/chats_page.dart';
 import 'app_route_path.dart';
 import 'auth_router_refresh.dart';
+import '../../features/chat/presentation/pages/new_chat_page.dart';
 
 final authRouterRefreshProvider = Provider<AuthRouterRefresh>((ref) {
   final refresh = AuthRouterRefresh();
@@ -66,6 +67,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutePath.chatsPath,
         builder: (context, state) => const ChatsPage(),
       ),
+
+      GoRoute(
+        path: AppRoutePath.newChatPath,
+        builder: (context, state) => const NewChatPage(),
+      ),
+
       GoRoute(
         path: AppRoutePath.chatDetailPath,
         builder: (context, state) {

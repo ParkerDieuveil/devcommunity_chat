@@ -5,6 +5,7 @@ abstract class ChatRepository {
   Stream<List<ChatEntity>> watchUserChats(String userId);
 
   Stream<List<MessageEntity>> watchMessages(String chatId);
+  Future<ChatEntity?> getChat(String chatId);
 
   Future<void> sendMessage({
     required String chatId,
@@ -12,6 +13,9 @@ abstract class ChatRepository {
     String? text,
     String? imageUrl,
   });
-
+  Future<void> markMessagesAsRead({
+    required String chatId,
+    required String userId,
+  });
   Future<String> createChat(List<String> participantIds);
 }

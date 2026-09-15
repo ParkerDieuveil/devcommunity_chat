@@ -1,34 +1,29 @@
 import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
 import 'package:devcommunitychat/features/profile/domain/repositories/profile_repository.dart';
 
-class UpdateProfileCall {
-  final String userId;
-  final String name;
-  final String? photoUrl;
-  final String? email;
-  final String? bio;
-
-  UpdateProfileCall({
-    required this.userId,
-    required this.name,
-    this.photoUrl,
-    this.email,
-    this.bio,
-  });
-}
-
-/// Fake en mémoire de [ProfileRepository], utilisé pour tester la
-/// modification de profil sans dépendre de Firestore.
 class FakeProfileRepository implements ProfileRepository {
-  final List<UpdateProfileCall> updateCalls = [];
-  Exception? updateProfileError;
-  ProfileEntity? profileToReturn;
+  ProfileEntity? profile;
+
+  int updateProfileCallCount = 0;
+  int updatePushCallCount = 0;
+  String? lastUserId;
+  String? lastName;
+  String? lastEmail;
+  String? lastBio;
+  String? lastTitle;
+  bool? lastPushEnabled;
+
+  FakeProfileRepository({this.profile});
 
   @override
-  Future<ProfileEntity?> getProfile(String userId) async => profileToReturn;
+  Future<ProfileEntity?> getProfile(String userId) async {
+    return profile;
+  }
 
   @override
-  Future<void> saveProfile(ProfileEntity profile) async {}
+  Stream<ProfileEntity?> watchProfile(String userId) {
+    return Stream.value(profile);
+  }
 
   @override
   Future<ProfileEntity> updateProfile({
@@ -37,27 +32,69 @@ class FakeProfileRepository implements ProfileRepository {
     String? photoUrl,
     String? email,
     String? bio,
+    String? title,
   }) async {
-    updateCalls.add(
-      UpdateProfileCall(
-        userId: userId,
-        name: name,
-        photoUrl: photoUrl,
-        email: email,
-        bio: bio,
-      ),
-    );
+    updateProfileCallCount++;
+    lastUserId = userId;
+    lastName = name;
+    lastEmail = email;
+    lastBio = bio;
+    lastTitle = title;
 
-    if (updateProfileError != null) {
-      throw updateProfileError!;
-    }
-
-    return ProfileEntity(
+    profile = ProfileEntity(
       id: userId,
       displayname: name,
-      email: email ?? '',
-      bio: bio ?? '',
-      photoUrl: photoUrl ?? '',
+      photoUrl: photoUrl ?? profile?.photoUrl ?? '',
+      email: email ?? profile?.email ?? '',
+      bio: bio ?? profile?.bio ?? '',
+      title: title ?? profile?.title ?? '',
+      pushNotificationsEnabled: profile?.pushNotificationsEnabled ?? true,
+      createdAt: profile?.createdAt,
+      lastSeen: profile?.lastSeen,
+      isOnline: profile?.isOnline ?? false,
     );
+
+    return profile!;
+  }
+
+  @override
+  Future<void> updatePushNotifications({
+    required String userId,
+    required bool enabled,
+  }) async {
+    updatePushCallCount++;
+    lastUserId = userId;
+    lastPushEnabled = enabled;
+    if (profile != null) {
+      profile = profile!.copyWith(pushNotificationsEnabled: enabled);
+    }
+  }
+
+  @override
+  Future<ProfileEntity> updatePhotoUrl({
+    required String userId,
+    required String photoUrl,
+  }) async {
+    lastUserId = userId;
+    profile = (profile ??
+            ProfileEntity(
+              id: userId,
+              displayname: '',
+              email: '',
+              bio: '',
+              photoUrl: '',
+            ))
+        .copyWith(photoUrl: photoUrl);
+    return profile!;
+  }
+
+  @override
+  Future<void> saveProfile(ProfileEntity profile) async {
+    this.profile = profile;
+  }
+
+  @override
+  Stream<List<ProfileEntity>> watchProfiles() {
+    return Stream.value(profile != null ? [profile!] : []);
   }
 }

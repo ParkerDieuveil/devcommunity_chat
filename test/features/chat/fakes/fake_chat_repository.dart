@@ -21,18 +21,32 @@ class SentMessage {
 /// Fake en mémoire de [ChatRepository], utilisé pour tester l'envoi de
 /// messages et la réception temps réel sans dépendre de Firestore.
 class FakeChatRepository implements ChatRepository {
-  final _chatsController = StreamController<List<ChatEntity>>.broadcast();
+  final _chatsController =
+  StreamController<List<ChatEntity>>.broadcast();
+
   final _messagesController =
-      StreamController<List<MessageEntity>>.broadcast();
+  StreamController<List<MessageEntity>>.broadcast();
+
+  /// Liste locale des conversations utilisées par les tests.
+  final List<ChatEntity> _chats = [];
 
   final List<SentMessage> sentMessages = [];
+
   Exception? sendMessageError;
+
   String createChatResult = 'fake-chat-id';
 
-  void emitChats(List<ChatEntity> chats) => _chatsController.add(chats);
+  void emitChats(List<ChatEntity> chats) {
+    _chats
+      ..clear()
+      ..addAll(chats);
 
-  void emitMessages(List<MessageEntity> messages) =>
-      _messagesController.add(messages);
+    _chatsController.add(chats);
+  }
+
+  void emitMessages(List<MessageEntity> messages) {
+    _messagesController.add(messages);
+  }
 
   void dispose() {
     _chatsController.close();
@@ -40,12 +54,14 @@ class FakeChatRepository implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatEntity>> watchUserChats(String userId) =>
-      _chatsController.stream;
+  Stream<List<ChatEntity>> watchUserChats(String userId) {
+    return _chatsController.stream;
+  }
 
   @override
-  Stream<List<MessageEntity>> watchMessages(String chatId) =>
-      _messagesController.stream;
+  Stream<List<MessageEntity>> watchMessages(String chatId) {
+    return _messagesController.stream;
+  }
 
   @override
   Future<void> sendMessage({
@@ -57,6 +73,7 @@ class FakeChatRepository implements ChatRepository {
     if (sendMessageError != null) {
       throw sendMessageError!;
     }
+
     sentMessages.add(
       SentMessage(
         chatId: chatId,
@@ -68,7 +85,32 @@ class FakeChatRepository implements ChatRepository {
   }
 
   @override
-  Future<String> createChat(List<String> participantIds) async {
+  Future<String> createChat(
+      List<String> participantIds,
+      ) async {
     return createChatResult;
+  }
+
+  @override
+  Future<ChatEntity?> getChat(
+      String chatId,
+      ) async {
+    for (final chat in _chats) {
+      if (chat.chatId == chatId) {
+        return chat;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  Future<void> markMessagesAsRead({
+    required String chatId,
+    required String userId,
+  }) async {
+    // Dans le fake, aucune opération Firestore n'est nécessaire.
+    // Cette méthode existe uniquement pour respecter le contrat
+    // de ChatRepository utilisé par les tests.
   }
 }
