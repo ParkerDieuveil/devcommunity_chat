@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_info.dart';
 import '../../../../core/locale/app_strings.dart';
 import '../../../../core/locale/locale_controller.dart';
-import '../../../../core/router/app_route_path.dart';
 import '../../../../core/router/navigation_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
@@ -13,7 +11,6 @@ import '../../../../core/widgets/app_logo_header.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/utils/logout_navigation.dart';
-import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 
 /// Écran « Plus » — style Figma, limité au scope camp (auth / chat / prefs).
@@ -119,17 +116,6 @@ class MorePage extends ConsumerWidget {
                   ),
                   subtitle: AppInfo.buildLabel,
                   onTap: null,
-                ),
-                _MoreNavRow(
-                  icon: Icons.slideshow_outlined,
-                  label: s.replayIntro,
-                  onTap: () async {
-                    await ref
-                        .read(onboardingCompletedProvider.notifier)
-                        .reset();
-                    if (!context.mounted) return;
-                    context.go(AppRoutePath.splashPath);
-                  },
                 ),
                 const SizedBox(height: 8),
                 ListTile(
