@@ -16,13 +16,19 @@ import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'app_route_path.dart';
 import 'auth_router_refresh.dart';
+import 'root_navigator_key.dart';
 
 final authRouterRefreshProvider = Provider<AuthRouterRefresh>((ref) {
   final refresh = AuthRouterRefresh();
 
   // Relance le redirect à chaque changement de session (pas seulement au boot).
-  ref.listen(authStateProvider, (previous, next) => refresh.notify());
-  ref.listen(onboardingCompletedProvider, (previous, next) => refresh.notify());
+  // Microtask : évite notifyListeners pendant un rebuild Riverpod.
+  ref.listen(authStateProvider, (previous, next) {
+    Future.microtask(refresh.notify);
+  });
+  ref.listen(onboardingCompletedProvider, (previous, next) {
+    Future.microtask(refresh.notify);
+  });
 
   ref.onDispose(refresh.dispose);
   return refresh;
@@ -32,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ref.watch(authRouterRefreshProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutePath.splashPath,
     refreshListenable: refresh,
     redirect: (context, state) {

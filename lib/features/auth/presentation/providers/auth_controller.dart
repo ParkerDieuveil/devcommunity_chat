@@ -91,9 +91,10 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
 
     try {
       await ref.read(logoutUseCaseProvider).call();
-      // Prochaine session repart sur l’onglet Chat, pas More/Profile.
-      ref.read(mainTabProvider.notifier).selectTab(MainTab.chat);
       state = const AsyncData(null);
+      // Reset onglet pour la prochaine session (après null user :
+      // HomePage n'affiche plus les onglets).
+      ref.read(mainTabProvider.notifier).selectTab(MainTab.chat);
     } on FirebaseAuthException catch (error, stackTrace) {
       state = AsyncError(
         _mapFirebaseAuthError(error),
@@ -113,11 +114,11 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
         return 'L’adresse email est invalide.';
 
       case 'user-not-found':
-        return 'Aucun compte ne correspond à cette adresse email.';
+        return 'Aucun compte associé à cet email. Créez un compte pour continuer.';
 
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Email ou mot de passe incorrect.';
+        return 'Email ou mot de passe incorrect. Vérifiez vos identifiants ou créez un compte.';
 
       case 'email-already-in-use':
         return 'Cette adresse email est déjà utilisée.';

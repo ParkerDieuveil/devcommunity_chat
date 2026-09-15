@@ -46,6 +46,7 @@ void main() {
       await tester.tap(find.text('Déconnexion').first);
       await tester.pump();
       await tester.pump();
+      await tester.pump();
 
       expect(fakeRepository.logoutCalled, isTrue);
     });
@@ -73,6 +74,7 @@ void main() {
 
       await tester.ensureVisible(find.text('Déconnexion').first);
       await tester.tap(find.text('Déconnexion').first);
+      await tester.pump();
       await tester.pump();
       await tester.pump();
 
