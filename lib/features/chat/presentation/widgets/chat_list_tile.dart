@@ -15,6 +15,7 @@ class ChatListTile extends StatelessWidget {
     super.key,
     required this.chat,
     required this.others,
+    required this.currentUserId,
     required this.userFallback,
     required this.groupFallback,
     required this.noMessagePreview,
@@ -25,6 +26,7 @@ class ChatListTile extends StatelessWidget {
 
   final ChatEntity chat;
   final List<ProfileEntity> others;
+  final String currentUserId;
   final String userFallback;
   final String groupFallback;
   final String noMessagePreview;
@@ -49,6 +51,9 @@ class ChatListTile extends StatelessWidget {
     final photoUrl = others.length == 1 ? others.first.photoUrl : '';
     final preview = chat.lastMessage ?? noMessagePreview;
     final colors = Theme.of(context).colorScheme;
+    final unread = chat.unreadFor(currentUserId);
+    final hasUnread = unread > 0;
+    final unreadLabel = unread > 99 ? '99+' : '$unread';
 
     return InkWell(
       onTap: () => context.push(AppRoutePath.chatDetail(chat.chatId)),
@@ -103,21 +108,58 @@ class ChatListTile extends StatelessWidget {
                         Text(
                           timeLabel,
                           style: TextStyle(
-                            color: colors.onSurfaceVariant,
+                            color: hasUnread
+                                ? AppColors.brand
+                                : colors.onSurfaceVariant,
                             fontSize: 12,
+                            fontWeight:
+                                hasUnread ? FontWeight.w600 : FontWeight.w400,
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    preview,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: colors.onSurfaceVariant,
-                      fontSize: 14,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          preview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: hasUnread
+                                ? colors.onSurface
+                                : colors.onSurfaceVariant,
+                            fontSize: 14,
+                            fontWeight:
+                                hasUnread ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      if (hasUnread) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.brand,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            unreadLabel,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

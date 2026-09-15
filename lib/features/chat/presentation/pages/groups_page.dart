@@ -42,53 +42,85 @@ class GroupsPage extends ConsumerWidget {
             ],
           ),
           Expanded(
-            child: chatsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('$error')),
-              data: (chats) {
-                final groups = chats
-                    .where((c) => c.participantIds.length > 2)
-                    .toList();
-
-                if (groups.isEmpty) {
-                  return EmptyListPlaceholder(
-                    icon: Icons.groups_outlined,
-                    title: s.emptyGroupsTitle,
-                    subtitle: s.emptyGroupsSubtitle,
-                    buttonLabel: s.createGroup,
-                    onAction: () => context.push(AppRoutePath.createGroupPath),
-                  );
-                }
-
-                return profilesAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => Center(child: Text('$error')),
-                  data: (profiles) {
-                    return ListView.builder(
-                      itemCount: groups.length,
-                      itemBuilder: (context, index) {
-                        final chat = groups[index];
-                        final others = findOtherProfiles(
-                          participantIds: chat.participantIds,
-                          currentUserId: user.id,
-                          profiles: profiles,
-                        );
-                        return ChatListTile(
-                          chat: chat,
-                          others: others,
-                          userFallback: s.groupFallback,
-                          groupFallback: s.groupFallback,
-                          noMessagePreview: s.noMessagePreview,
-                          yesterdayLabel: s.yesterday,
-                          weekdayLabels: s.weekdayShort,
-                          leadingIsGroup: true,
-                        );
-                      },
-                    );
-                  },
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.03),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
                 );
               },
+              child: chatsAsync.when(
+                loading: () => const Center(
+                  key: ValueKey('groups-loading'),
+                  child: CircularProgressIndicator(),
+                ),
+                error: (error, _) => Center(
+                  key: const ValueKey('groups-error'),
+                  child: Text('$error'),
+                ),
+                data: (chats) {
+                  final groups = chats
+                      .where((c) => c.participantIds.length > 2)
+                      .toList();
+
+                  if (groups.isEmpty) {
+                    return EmptyListPlaceholder(
+                      key: const ValueKey('groups-empty'),
+                      icon: Icons.groups_outlined,
+                      title: s.emptyGroupsTitle,
+                      subtitle: s.emptyGroupsSubtitle,
+                      buttonLabel: s.createGroup,
+                      onAction: () =>
+                          context.push(AppRoutePath.createGroupPath),
+                    );
+                  }
+
+                  return profilesAsync.when(
+                    loading: () => const Center(
+                      key: ValueKey('groups-profiles-loading'),
+                      child: CircularProgressIndicator(),
+                    ),
+                    error: (error, _) => Center(
+                      key: const ValueKey('groups-profiles-error'),
+                      child: Text('$error'),
+                    ),
+                    data: (profiles) {
+                      return ListView.builder(
+                        key: const ValueKey('groups-list'),
+                        itemCount: groups.length,
+                        itemBuilder: (context, index) {
+                          final chat = groups[index];
+                          final others = findOtherProfiles(
+                            participantIds: chat.participantIds,
+                            currentUserId: user.id,
+                            profiles: profiles,
+                          );
+                          return ChatListTile(
+                            chat: chat,
+                            others: others,
+                            currentUserId: user.id,
+                            userFallback: s.groupFallback,
+                            groupFallback: s.groupFallback,
+                            noMessagePreview: s.noMessagePreview,
+                            yesterdayLabel: s.yesterday,
+                            weekdayLabels: s.weekdayShort,
+                            leadingIsGroup: true,
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ],

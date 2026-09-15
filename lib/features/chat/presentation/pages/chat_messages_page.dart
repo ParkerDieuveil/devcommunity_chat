@@ -10,6 +10,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../domain/entities/chat_media_image.dart';
+import '../providers/chat_messages_controller.dart';
 import '../providers/chat_provider.dart';
 import '../utils/chat_display.dart';
 import '../widgets/chat_attachment_panel.dart';
@@ -37,9 +38,17 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _markMessagesAsRead();
     });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels <= 80) {
+      ref.read(chatMessagesControllerProvider(widget.chatId).notifier).loadMore();
+    }
   }
 
   @override
@@ -173,12 +182,13 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final s = ref.watch(appStringsProvider);
-    final messagesAsync = ref.watch(chatMessagesProvider(widget.chatId));
+    final messagesState =
+        ref.watch(chatMessagesControllerProvider(widget.chatId));
     final profilesAsync = ref.watch(profilesProvider);
     final chatAsync = ref.watch(chatByIdProvider(widget.chatId));
 
-    ref.listen(chatMessagesProvider(widget.chatId), (previous, next) {
-      next.whenData((messages) => _ensureLatestVisible(messages.length));
+    ref.listen(chatMessagesControllerProvider(widget.chatId), (previous, next) {
+      _ensureLatestVisible(next.messages.length);
     });
 
     final others = chatAsync.maybeWhen(
@@ -229,15 +239,24 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
           Expanded(
             child: ColoredBox(
               color: chatBg,
-              child: messagesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(error.toString(), textAlign: TextAlign.center),
-                  ),
-                ),
-                data: (messages) {
+              child: Builder(
+                builder: (context) {
+                  if (messagesState.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (messagesState.error != null &&
+                      messagesState.messages.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          messagesState.error.toString(),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+                  final messages = messagesState.messages;
                   if (messages.isEmpty) {
                     return Center(
                       child: Text(
@@ -252,9 +271,24 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                    itemCount: messages.length,
+                    itemCount:
+                        messages.length + (messagesState.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
-                      final message = messages[index];
+                      if (messagesState.isLoadingMore && index == 0) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      final messageIndex =
+                          messagesState.isLoadingMore ? index - 1 : index;
+                      final message = messages[messageIndex];
                       return ChatMessageBubble(
                         message: message,
                         mine: message.senderId == user?.id,
@@ -267,16 +301,41 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
               ),
             ),
           ),
-          if (_attachmentsOpen)
-            ChatAttachmentPanel(
-              enabled: !_sending,
-              cameraLabel: s.attachCamera,
-              recordLabel: s.attachRecord,
-              galleryLabel: s.attachGallery,
-              onCamera: () => _sendImage(ChatMediaPickSource.camera),
-              onRecord: _openVoiceRecorder,
-              onGallery: () => _sendImage(ChatMediaPickSource.gallery),
+          ClipRect(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SizeTransition(
+                    sizeFactor: animation,
+                    axisAlignment: -1,
+                    child: child,
+                  ),
+                );
+              },
+              child: _attachmentsOpen
+                  ? ChatAttachmentPanel(
+                      key: const ValueKey('attachments-open'),
+                      enabled: !_sending,
+                      cameraLabel: s.attachCamera,
+                      recordLabel: s.attachRecord,
+                      galleryLabel: s.attachGallery,
+                      onCamera: () =>
+                          _sendImage(ChatMediaPickSource.camera),
+                      onRecord: _openVoiceRecorder,
+                      onGallery: () =>
+                          _sendImage(ChatMediaPickSource.gallery),
+                    )
+                  : const SizedBox(
+                      key: ValueKey('attachments-closed'),
+                      width: double.infinity,
+                      height: 0,
+                    ),
             ),
+          ),
           ChatMessageInputBar(
             controller: _controller,
             sending: _sending,

@@ -11,6 +11,7 @@ class ChatModel extends ChatEntity {
     super.lastMessageSenderId,
     super.lastMessageAt,
     required super.createdAt,
+    super.unreadCounts,
   });
 
   factory ChatModel.fromFirestore(DocumentSnapshot doc) {
@@ -24,6 +25,7 @@ class ChatModel extends ChatEntity {
       lastMessageSenderId: data['lastMessageSenderId'] as String?,
       lastMessageAt: _readDateTime(data['lastMessageAt']),
       createdAt: _readDateTime(data['createdAt']) ?? DateTime.now(),
+      unreadCounts: _readUnreadCounts(data['unreadCounts']),
     );
   }
 
@@ -37,7 +39,19 @@ class ChatModel extends ChatEntity {
           ? Timestamp.fromDate(lastMessageAt!)
           : null,
       'createdAt': Timestamp.fromDate(createdAt),
+      'unreadCounts': unreadCounts,
     };
+  }
+
+  static Map<String, int> _readUnreadCounts(dynamic value) {
+    if (value is! Map) return const {};
+    final result = <String, int>{};
+    value.forEach((key, raw) {
+      if (raw is num) {
+        result[key.toString()] = raw.toInt();
+      }
+    });
+    return result;
   }
 
   static DateTime? _readDateTime(dynamic value) {

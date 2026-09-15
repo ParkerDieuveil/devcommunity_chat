@@ -10,10 +10,14 @@ class AppBottomNav extends ConsumerWidget {
     super.key,
     required this.selected,
     required this.onSelect,
+    this.chatBadge = 0,
+    this.groupsBadge = 0,
   });
 
   final MainTab selected;
   final ValueChanged<MainTab> onSelect;
+  final int chatBadge;
+  final int groupsBadge;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,6 +44,7 @@ class AppBottomNav extends ConsumerWidget {
                     label: _labelFor(tab, s),
                     selected: tab == selected,
                     inactiveColor: inactive,
+                    badgeCount: _badgeFor(tab),
                     onTap: () => onSelect(tab),
                   ),
                 ),
@@ -48,6 +53,14 @@ class AppBottomNav extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  int _badgeFor(MainTab tab) {
+    return switch (tab) {
+      MainTab.chat => chatBadge,
+      MainTab.groups => groupsBadge,
+      MainTab.profile || MainTab.more => 0,
+    };
   }
 }
 
@@ -66,6 +79,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.inactiveColor,
+    required this.badgeCount,
     required this.onTap,
   });
 
@@ -73,11 +87,13 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool selected;
   final Color inactiveColor;
+  final int badgeCount;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final icons = _iconsFor(tab);
+    final badgeLabel = badgeCount > 99 ? '99+' : '$badgeCount';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -92,10 +108,45 @@ class _NavItem extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  selected ? icons.selectedIcon : icons.icon,
-                  size: 22,
-                  color: selected ? Colors.white : inactiveColor,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      selected ? icons.selectedIcon : icons.icon,
+                      size: 22,
+                      color: selected ? Colors.white : inactiveColor,
+                    ),
+                    if (badgeCount > 0)
+                      Positioned(
+                        right: -10,
+                        top: -6,
+                        child: Container(
+                          constraints: const BoxConstraints(minWidth: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? Colors.white
+                                : AppColors.brand,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            badgeLabel,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: selected
+                                  ? AppColors.brand
+                                  : Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../domain/entities/messages_page.dart';
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
 
@@ -7,7 +8,16 @@ abstract class ChatRemoteDataSource {
   Stream<List<ChatModel>> watchUserChats(String userId);
   Future<ChatModel?> getChat(String chatId);
 
-  Stream<List<MessageModel>> watchMessages(String chatId);
+  Stream<List<MessageModel>> watchMessages(
+    String chatId, {
+    int limit = kMessagePageSize,
+  });
+
+  Future<MessagesPage> fetchOlderMessages({
+    required String chatId,
+    required String beforeMessageId,
+    int limit = kMessagePageSize,
+  });
 
   Future<void> sendMessage({
     required String chatId,
@@ -71,22 +81,50 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
   @override
   Stream<List<MessageModel>> watchMessages(
-      String chatId,
-      ) {
+    String chatId, {
+    int limit = kMessagePageSize,
+  }) {
     return _chats
         .doc(chatId)
         .collection('messages')
-        .orderBy(
-      'timestamp',
-      descending: false,
-    )
+        .orderBy('timestamp')
+        .limitToLast(limit)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map(
-            (doc) => MessageModel.fromFirestore(doc),
-      )
-          .toList(),
+              .map((doc) => MessageModel.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  @override
+  Future<MessagesPage> fetchOlderMessages({
+    required String chatId,
+    required String beforeMessageId,
+    int limit = kMessagePageSize,
+  }) async {
+    final messagesRef = _chats.doc(chatId).collection('messages');
+    final cursorDoc = await messagesRef.doc(beforeMessageId).get();
+
+    if (!cursorDoc.exists) {
+      return const MessagesPage(messages: [], hasMore: false);
+    }
+
+    final snapshot = await messagesRef
+        .orderBy('timestamp', descending: true)
+        .startAfterDocument(cursorDoc)
+        .limit(limit)
+        .get();
+
+    final messages = snapshot.docs
+        .map((doc) => MessageModel.fromFirestore(doc))
+        .toList()
+        .reversed
+        .toList();
+
+    return MessagesPage(
+      messages: messages,
+      hasMore: snapshot.docs.length >= limit,
     );
   }
 
@@ -115,10 +153,8 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
     final batch = firestore.batch();
 
-    final messageRef = _chats
-        .doc(chatId)
-        .collection('messages')
-        .doc();
+    final messageRef = _chats.doc(chatId).collection('messages').doc();
+    final chatRef = _chats.doc(chatId);
 
     batch.set(messageRef, {
       'senderId': senderId,
@@ -127,20 +163,26 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'audioUrl': audioUrl,
       'type': type,
       'timestamp': FieldValue.serverTimestamp(),
-
-      // Nouveau message = pas encore lu.
       'readAt': null,
     });
 
-    batch.update(
-      _chats.doc(chatId),
-      {
-        'lastMessage': preview,
-        'lastMessageSenderId': senderId,
-        'lastMessageAt': FieldValue.serverTimestamp(),
-      },
-    );
+    final chatUpdate = <String, dynamic>{
+      'lastMessage': preview,
+      'lastMessageSenderId': senderId,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+    };
 
+    // Badge non-lus pour les autres participants (style WhatsApp).
+    final chatSnap = await chatRef.get();
+    final participants = List<String>.from(
+      chatSnap.data()?['participantIds'] ?? const [],
+    );
+    for (final participantId in participants) {
+      if (participantId == senderId) continue;
+      chatUpdate['unreadCounts.$participantId'] = FieldValue.increment(1);
+    }
+
+    batch.update(chatRef, chatUpdate);
     await batch.commit();
   }
 
@@ -177,6 +219,9 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'lastMessageSenderId': null,
       'lastMessageAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
+      'unreadCounts': {
+        for (final id in sortedIds) id: 0,
+      },
     });
 
     return docRef.id;
@@ -187,32 +232,39 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     required String chatId,
     required String userId,
   }) async {
+    // Lazy: seulement les messages récents.
     final snapshot = await _chats
         .doc(chatId)
         .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(kMessagePageSize)
         .get();
 
     final batch = firestore.batch();
+    var updates = 0;
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
-
       final senderId = data['senderId'] as String?;
-
       final readAt = data['readAt'];
 
-      // On marque uniquement les messages reçus
-      // et qui ne sont pas encore lus.
       if (senderId != userId && readAt == null) {
         batch.update(
           doc.reference,
-          {
-            'readAt': FieldValue.serverTimestamp(),
-          },
+          {'readAt': FieldValue.serverTimestamp()},
         );
+        updates++;
       }
     }
 
-    await batch.commit();
+    // Remet le badge à 0 pour cet utilisateur.
+    batch.update(_chats.doc(chatId), {
+      'unreadCounts.$userId': 0,
+    });
+    updates++;
+
+    if (updates > 0) {
+      await batch.commit();
+    }
   }
 }

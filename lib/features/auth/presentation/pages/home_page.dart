@@ -8,6 +8,7 @@ import 'package:devcommunitychat/core/router/root_navigator_key.dart';
 import 'package:devcommunitychat/core/widgets/app_bottom_nav.dart';
 import '../../../chat/presentation/pages/chats_page.dart';
 import '../../../chat/presentation/pages/groups_page.dart';
+import '../../../chat/presentation/providers/chat_provider.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/auth_provider.dart';
 import 'more_page.dart';
@@ -34,6 +35,14 @@ class HomePage extends ConsumerWidget {
 
     final selectedTab = ref.watch(mainTabProvider);
     final selectedIndex = selectedTab.index;
+    final chatsAsync = ref.watch(userChatsProvider(user.id));
+    final chats = chatsAsync.asData?.value ?? const [];
+    final chatBadge = chats
+        .where((c) => c.participantIds.length <= 2)
+        .fold<int>(0, (sum, c) => sum + c.unreadFor(user.id));
+    final groupsBadge = chats
+        .where((c) => c.participantIds.length > 2)
+        .fold<int>(0, (sum, c) => sum + c.unreadFor(user.id));
 
     const pages = [
       ChatsPage(),
@@ -49,6 +58,8 @@ class HomePage extends ConsumerWidget {
       ),
       bottomNavigationBar: AppBottomNav(
         selected: selectedTab,
+        chatBadge: chatBadge,
+        groupsBadge: groupsBadge,
         onSelect: (tab) {
           ref.read(mainTabProvider.notifier).selectTab(tab);
         },
