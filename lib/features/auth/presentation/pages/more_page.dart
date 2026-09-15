@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_info.dart';
@@ -8,13 +7,14 @@ import '../../../../core/locale/app_strings.dart';
 import '../../../../core/locale/locale_controller.dart';
 import '../../../../core/router/app_route_path.dart';
 import '../../../../core/router/navigation_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
+import '../../../../core/widgets/app_logo_header.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/utils/logout_navigation.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
-
-const _headerBlue = Color(0xFF1565C0);
 
 /// Écran « Plus » — style Figma, limité au scope camp (auth / chat / prefs).
 class MorePage extends ConsumerWidget {
@@ -38,25 +38,7 @@ class MorePage extends ConsumerWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
-          ColoredBox(
-            color: _headerBlue,
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: 56,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: SvgPicture.asset(
-                      'assets/logo/chat.svg',
-                      height: 36,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AppLogoHeader(),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(8, 16, 8, 28),
@@ -152,25 +134,17 @@ class MorePage extends ConsumerWidget {
                 const SizedBox(height: 8),
                 ListTile(
                   enabled: !authAction.isLoading,
-                  leading: const Icon(Icons.logout, color: Color(0xFFE53935)),
+                  leading: const Icon(Icons.logout, color: AppColors.danger),
                   title: Text(
                     s.logout,
                     style: const TextStyle(
-                      color: Color(0xFFE53935),
+                      color: AppColors.danger,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   onTap: authAction.isLoading
                       ? null
-                      : () async {
-                          await ref
-                              .read(authControllerProvider.notifier)
-                              .logout();
-                          if (!context.mounted) return;
-                          if (GoRouter.maybeOf(context) != null) {
-                            context.go(AppRoutePath.loginPath);
-                          }
-                        },
+                      : () => logoutAndGoLogin(ref, context),
                 ),
               ],
             ),
@@ -206,7 +180,7 @@ class _MoreLanguageRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark
               ? colors.primary.withValues(alpha: 0.18)
-              : const Color(0xFFE8F7FD),
+              : AppColors.brandSurface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(

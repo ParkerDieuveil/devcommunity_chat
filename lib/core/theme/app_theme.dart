@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 
-class AppTheme {
-  static const _brand = Color(0xFF03A9F4);
-  static const _headerBlue = Color(0xFF1565C0);
+import 'app_colors.dart';
 
+class AppTheme {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: _brand,
+      seedColor: AppColors.brand,
       brightness: Brightness.dark,
-      primary: _brand,
+      primary: AppColors.brand,
     ),
-    scaffoldBackgroundColor: const Color(0xFF0B0F19),
+    scaffoldBackgroundColor: AppColors.scaffoldDark,
     appBarTheme: const AppBarTheme(
-      backgroundColor: _headerBlue,
+      backgroundColor: AppColors.headerBlue,
       foregroundColor: Colors.white,
       elevation: 0,
     ),
@@ -36,7 +35,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(width: 1.5, color: _brand),
+        borderSide: const BorderSide(width: 1.5, color: AppColors.brand),
       ),
     ),
     cardTheme: CardThemeData(
@@ -52,7 +51,7 @@ class AppTheme {
         return const Color(0xFF90A4AE);
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return _brand;
+        if (states.contains(WidgetState.selected)) return AppColors.brand;
         return const Color(0xFF37474F);
       }),
     ),
@@ -62,13 +61,13 @@ class AppTheme {
     brightness: Brightness.light,
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: _brand,
+      seedColor: AppColors.brand,
       brightness: Brightness.light,
-      primary: _brand,
+      primary: AppColors.brand,
     ),
     scaffoldBackgroundColor: const Color(0xFFF7F8FC),
     appBarTheme: const AppBarTheme(
-      backgroundColor: _headerBlue,
+      backgroundColor: AppColors.headerBlue,
       foregroundColor: Colors.white,
       elevation: 0,
     ),
@@ -90,7 +89,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(width: 1.5, color: _brand),
+        borderSide: const BorderSide(width: 1.5, color: AppColors.brand),
       ),
     ),
     cardTheme: CardThemeData(
@@ -106,7 +105,7 @@ class AppTheme {
         return const Color(0xFFB0BEC5);
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return _brand;
+        if (states.contains(WidgetState.selected)) return AppColors.brand;
         return const Color(0xFFE0E0E0);
       }),
     ),

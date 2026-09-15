@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/locale/app_strings.dart';
+import '../../../../core/utils/form_validators.dart';
 import '../providers/auth_controller.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -82,24 +83,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return s.authGenericError;
   }
 
-  String? _validateEmail(String? value, AppStrings s) {
-    final email = value?.trim() ?? '';
-
-    if (email.isEmpty) {
-      return s.emailRequired;
-    }
-
-    final emailRegex = RegExp(
-      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-    );
-
-    if (!emailRegex.hasMatch(email)) {
-      return s.invalidEmail;
-    }
-
-    return null;
-  }
-
   String? _validatePassword(String? value, AppStrings s) {
     if (value == null || value.isEmpty) {
       return s.passwordRequired;
@@ -169,7 +152,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: (v) => _validateEmail(v, s),
+                      validator: (v) => validateEmail(v, s),
                     ),
                     const SizedBox(height: 18),
                     TextFormField(

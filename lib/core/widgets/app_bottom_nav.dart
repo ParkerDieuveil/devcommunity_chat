@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../locale/app_strings.dart';
 import '../router/navigation_provider.dart';
-
-const _navAccent = Color(0xFF03A9F4);
+import '../theme/app_colors.dart';
 
 class AppBottomNav extends ConsumerWidget {
   const AppBottomNav({
@@ -20,7 +19,7 @@ class AppBottomNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(appStringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barColor = isDark ? const Color(0xFF121826) : Colors.white;
+    final barColor = isDark ? AppColors.navBarDark : Colors.white;
     final inactive = isDark ? const Color(0xFF78909C) : const Color(0xFF90A4AE);
 
     return Material(
@@ -83,7 +82,7 @@ class _NavItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
-        color: selected ? _navAccent : Colors.transparent,
+        color: selected ? AppColors.brand : Colors.transparent,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
