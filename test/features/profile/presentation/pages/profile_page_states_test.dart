@@ -29,7 +29,8 @@ Future<void> _pumpProfilePage(
   FakeProfileRepository? repository,
 }) async {
   final prefs = await _prefs();
-  final fake = repository ??
+  final fake =
+      repository ??
       FakeProfileRepository(
         profile: ProfileEntity(
           id: 'user-123',
@@ -39,6 +40,7 @@ Future<void> _pumpProfilePage(
           photoUrl: '',
           title: 'Flutter Dev',
           createdAt: DateTime(2024, 3, 1),
+          lastSeen: DateTime.now(),
           isOnline: true,
         ),
       );
@@ -110,9 +112,7 @@ void main() {
   });
 
   group('ProfilePage - interactions', () {
-    testWidgets('ouvre la feuille d\'édition pré-remplie', (
-      tester,
-    ) async {
+    testWidgets('ouvre la feuille d\'édition pré-remplie', (tester) async {
       await _pumpProfilePage(tester, authStream: Stream.value(_user));
       await tester.pumpAndSettle();
 

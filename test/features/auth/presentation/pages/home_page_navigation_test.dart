@@ -8,33 +8,55 @@ import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/pages/home_page.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/chat/presentation/providers/chat_provider.dart';
+import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
+import 'package:devcommunitychat/features/profile/presentation/providers/profile_provider.dart';
 
 import '../../../../helpers/test_prefs.dart';
+import '../../../profile/fakes/fake_profile_repository.dart';
 
 void main() {
   group('HomePage - navigation par onglets', () {
     const user = AppUser(
       id: 'u1',
       email: 'user@example.com',
+      displayName: 'Alexandre',
     );
 
     Future<void> pumpHomePage(WidgetTester tester) async {
       final prefs = await mockSharedPreferences();
 
+      final fakeProfileRepository = FakeProfileRepository(
+        profile: ProfileEntity(
+          id: user.id,
+          displayname: 'Alexandre',
+          email: user.email,
+          bio: 'Bio de test',
+          photoUrl: '',
+          title: 'Flutter Dev',
+          createdAt: DateTime(2024, 3, 1),
+          isOnline: true,
+          lastSeen: DateTime.now(),
+        ),
+      );
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            authStateProvider.overrideWith(
-              (ref) => Stream.value(user),
-            ),
-            userChatsProvider(user.id).overrideWith(
-              (ref) => Stream.value([]),
-            ),
+
+            // HomePage utilise currentUserProvider.
+            currentUserProvider.overrideWithValue(user),
+
+            // ProfilePage utilise directement authStateProvider.
+            authStateProvider.overrideWith((ref) => Stream.value(user)),
+
+            // Conversations affichées dans HomePage / ChatsPage.
+            userChatsProvider(user.id).overrideWith((ref) => Stream.value([])),
+
+            // Données du profil utilisées par ProfilePage.
+            profileRepositoryProvider.overrideWithValue(fakeProfileRepository),
           ],
-          child: const MaterialApp(
-            home: HomePage(),
-          ),
+          child: const MaterialApp(home: HomePage()),
         ),
       );
     }
@@ -49,6 +71,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(HomePage)),
       );
+
       expect(container.read(mainTabProvider), MainTab.chat);
     });
 
@@ -69,7 +92,7 @@ void main() {
       await tester.tap(find.text('Profil'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Déconnexion'), findsWidgets);
+      expect(find.text('Déconnexion'), findsOneWidget);
     });
   });
 }
