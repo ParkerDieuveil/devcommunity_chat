@@ -99,11 +99,15 @@ Au premier lancement, un parcours d’introduction présente le produit (discuss
 
 Le module de chat s’appuie sur **Cloud Firestore** :
 
-* liste des conversations ;
-* création d’un chat 1:1 ;
+* liste des conversations avec **badges de non-lus** (style messagerie) ;
+* recherche unifiée (discussions + contacts) depuis l’écran Chats ;
+* création d’un chat 1:1 avec **réutilisation du même `chatId`** pour une paire d’utilisateurs ;
+* invitation (copie presse-papiers) si l’email recherché n’a pas encore de compte — **pas de fausse discussion** ;
 * création de groupes avec **nom persisté** ;
 * envoi et réception de messages texte en temps réel ;
-* marquage des messages lus ;
+* **pagination / lazy loading** des messages (10 récents à l’ouverture, +10 au scroll vers le haut) ;
+* affichage via `ListView.builder` ;
+* marquage des messages lus (remet le compteur à zéro) ;
 * prévisualisation et horodatage localisés (FR / EN).
 
 Les flux sont exposés via des `StreamProvider` Riverpod, ce qui permet à l’interface de réagir automatiquement aux mises à jour Firestore.
@@ -153,6 +157,8 @@ La navigation principale distingue clairement :
 * **Profil** : informations et édition ;
 * **Plus** : langue, thème, informations.
 
+Le bouton **« + »** central (FAB docké dans l’encoche de la barre) ouvre le menu nouveau contact / nouveau groupe.
+
 Les groupes créés portent un nom visible dans les listes et l’en-tête de conversation.
 
 ### Profil utilisateur
@@ -173,6 +179,8 @@ Des transitions légères (fade / slide) animent notamment :
 
 * l’ouverture du panneau de pièces jointes ;
 * le passage entre états de liste (chargement, vide, contenu).
+
+La barre de navigation utilise une **encoche** (`CircularNotchedRectangle`) pour accueillir le FAB « + », avec un état sélectionné discret (icône / label brand, sans pavé concurrent).
 
 ---
 
@@ -411,12 +419,15 @@ Base fonctionnelle pour la démonstration du camp :
 
 * authentification et session ;
 * splash et onboarding ;
-* messagerie temps réel ;
+* messagerie temps réel avec badges non-lus ;
+* recherche discussions / contacts + invite si non inscrit ;
+* un seul chat 1:1 par paire d’utilisateurs ;
+* pagination messages (10) + `ListView.builder` ;
 * groupes avec nom ;
 * images et vocaux (sous réserve Storage) ;
 * profil et avatar ;
 * thème et localisation FR / EN ;
-* navigation Chats / Groupes / Profil / Plus ;
+* navigation Chats / Groupes / Profil / Plus + FAB « + » central ;
 * architecture Clean + Riverpod ;
 * animations UI légères ;
 * tests automatisés.
@@ -428,7 +439,7 @@ Référence d’intégration : les avancées de documentation et de stabilisatio
 ## Perspectives
 
 * notifications push ;
-* recherche avancée ;
+* partage d’invitation natif (au-delà du presse-papiers) ;
 * gestion enrichie des membres de groupe ;
 * amélioration continue des médias et de l’accessibilité.
 

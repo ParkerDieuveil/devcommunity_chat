@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_logo_header.dart';
 
-/// Header Chats : logo + actions, ou champ recherche.
+/// Header Chats : logo + recherche.
 class ChatsHeader extends StatelessWidget {
   const ChatsHeader({
     super.key,
@@ -11,20 +11,16 @@ class ChatsHeader extends StatelessWidget {
     required this.searchController,
     required this.searchHint,
     required this.searchTooltip,
-    required this.addTooltip,
     required this.onToggleSearch,
     required this.onSearchChanged,
-    required this.onAdd,
   });
 
   final bool searching;
   final TextEditingController searchController;
   final String searchHint;
   final String searchTooltip;
-  final String addTooltip;
   final VoidCallback onToggleSearch;
   final VoidCallback onSearchChanged;
-  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +31,6 @@ class ChatsHeader extends StatelessWidget {
             tooltip: searchTooltip,
             onPressed: onToggleSearch,
             icon: const Icon(Icons.search, color: Colors.white),
-          ),
-          IconButton(
-            tooltip: addTooltip,
-            onPressed: onAdd,
-            icon: const Icon(Icons.add, color: Colors.white),
           ),
         ],
       );

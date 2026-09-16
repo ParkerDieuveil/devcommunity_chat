@@ -91,14 +91,14 @@ void main() {
     );
 
     testWidgets(
-      'le + ouvre le menu Ajouter un contact / Créer un groupe',
+      'le bouton Nouvelle discussion ouvre le menu contact / groupe',
       (tester) async {
         await pumpPage(tester);
         await tester.pump();
         fakeRepository.emitChats([]);
         await tester.pump();
 
-        await tester.tap(find.byTooltip('Ajouter'));
+        await tester.tap(find.text('Nouvelle discussion'));
         await tester.pumpAndSettle();
 
         expect(find.text('Ajouter un contact'), findsOneWidget);

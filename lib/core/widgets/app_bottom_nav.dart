@@ -5,6 +5,7 @@ import '../locale/app_strings.dart';
 import '../router/navigation_provider.dart';
 import '../theme/app_colors.dart';
 
+/// Barre du bas avec encoche centrale pour le FAB « + ».
 class AppBottomNav extends ConsumerWidget {
   const AppBottomNav({
     super.key,
@@ -24,53 +25,94 @@ class AppBottomNav extends ConsumerWidget {
     final s = ref.watch(appStringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final barColor = isDark ? AppColors.navBarDark : Colors.white;
-    final inactive = isDark ? const Color(0xFF78909C) : const Color(0xFF90A4AE);
+    final inactive = isDark ? const Color(0xFF8A94A6) : const Color(0xFF9AA3AF);
 
-    return Material(
+    return BottomAppBar(
       color: barColor,
-      elevation: 8,
+      elevation: 10,
       shadowColor: Colors.black26,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 7,
+      padding: EdgeInsets.zero,
+      height: 64,
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            children: [
-              for (final tab in MainTab.values)
-                Expanded(
-                  child: _NavItem(
-                    tab: tab,
-                    label: _labelFor(tab, s),
-                    selected: tab == selected,
-                    inactiveColor: inactive,
-                    badgeCount: _badgeFor(tab),
-                    onTap: () => onSelect(tab),
-                  ),
-                ),
-            ],
-          ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _NavItem(
+                tab: MainTab.chat,
+                label: s.navChats,
+                selected: selected == MainTab.chat,
+                inactiveColor: inactive,
+                badgeCount: chatBadge,
+                onTap: () => onSelect(MainTab.chat),
+              ),
+            ),
+            Expanded(
+              child: _NavItem(
+                tab: MainTab.groups,
+                label: s.navGroups,
+                selected: selected == MainTab.groups,
+                inactiveColor: inactive,
+                badgeCount: groupsBadge,
+                onTap: () => onSelect(MainTab.groups),
+              ),
+            ),
+            const SizedBox(width: 64),
+            Expanded(
+              child: _NavItem(
+                tab: MainTab.profile,
+                label: s.navProfile,
+                selected: selected == MainTab.profile,
+                inactiveColor: inactive,
+                badgeCount: 0,
+                onTap: () => onSelect(MainTab.profile),
+              ),
+            ),
+            Expanded(
+              child: _NavItem(
+                tab: MainTab.more,
+                label: s.navMore,
+                selected: selected == MainTab.more,
+                inactiveColor: inactive,
+                badgeCount: 0,
+                onTap: () => onSelect(MainTab.more),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  int _badgeFor(MainTab tab) {
-    return switch (tab) {
-      MainTab.chat => chatBadge,
-      MainTab.groups => groupsBadge,
-      MainTab.profile || MainTab.more => 0,
-    };
-  }
 }
 
-String _labelFor(MainTab tab, AppStrings s) {
-  return switch (tab) {
-    MainTab.chat => s.navChats,
-    MainTab.groups => s.navGroups,
-    MainTab.profile => s.navProfile,
-    MainTab.more => s.navMore,
-  };
+/// FAB « + » à brancher en `centerDocked` sur le Scaffold.
+class ComposeFab extends StatelessWidget {
+  const ComposeFab({
+    super.key,
+    required this.onPressed,
+    required this.tooltip,
+  });
+
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return FloatingActionButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      elevation: 2,
+      highlightElevation: 4,
+      backgroundColor: isDark ? Colors.white : AppColors.brand,
+      foregroundColor: isDark ? AppColors.headerBlue : Colors.white,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add, size: 28),
+    );
+  }
 }
 
 class _NavItem extends StatelessWidget {
@@ -93,74 +135,62 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icons = _iconsFor(tab);
+    final color = selected ? AppColors.brand : inactiveColor;
     final badgeLabel = badgeCount > 99 ? '99+' : '$badgeCount';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Material(
-        color: selected ? AppColors.brand : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Icon(
-                      selected ? icons.selectedIcon : icons.icon,
-                      size: 22,
-                      color: selected ? Colors.white : inactiveColor,
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(
+                selected ? icons.selectedIcon : icons.icon,
+                size: 24,
+                color: color,
+              ),
+              if (badgeCount > 0)
+                Positioned(
+                  right: -9,
+                  top: -5,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
                     ),
-                    if (badgeCount > 0)
-                      Positioned(
-                        right: -10,
-                        top: -6,
-                        child: Container(
-                          constraints: const BoxConstraints(minWidth: 16),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? Colors.white
-                                : AppColors.brand,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badgeLabel,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: selected
-                                  ? AppColors.brand
-                                  : Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
+                    decoration: BoxDecoration(
+                      color: AppColors.brand,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      badgeLabel,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
                       ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    color: selected ? Colors.white : inactiveColor,
+                    ),
                   ),
                 ),
-              ],
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: color,
             ),
           ),
-        ),
+        ],
       ),
     );
   }

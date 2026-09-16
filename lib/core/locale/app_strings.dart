@@ -154,6 +154,21 @@ class AppStrings {
       : 'Add a contact to start chatting.';
   String get noChatsFound =>
       isFrench ? 'Aucune discussion trouvée' : 'No conversations found';
+  String get conversationsSection =>
+      isFrench ? 'Discussions' : 'Conversations';
+  String get contactsSection => isFrench ? 'Contacts' : 'Contacts';
+  String get userNotRegistered => isFrench
+      ? 'Cette personne n’a pas encore de compte DevCommunity Chat.'
+      : 'This person does not have a DevCommunity Chat account yet.';
+  String get inviteFriend => isFrench ? 'Inviter' : 'Invite';
+  String get inviteCopied => isFrench
+      ? 'Invitation copiée dans le presse-papiers'
+      : 'Invite copied to clipboard';
+  String inviteMessage(String query) => isFrench
+      ? 'Salut ! Rejoins-moi sur DevCommunity Chat pour discuter '
+          'avec l’équipe. Cherche « $query » ou crée ton compte.'
+      : 'Hey! Join me on DevCommunity Chat to chat with the team. '
+          'Look up "$query" or create your account.';
   String get emptyGroupsTitle =>
       isFrench ? 'Aucun groupe' : 'No groups';
   String get emptyGroupsSubtitle => isFrench

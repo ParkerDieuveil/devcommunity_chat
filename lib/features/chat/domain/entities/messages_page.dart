@@ -15,4 +15,4 @@ class MessagesPage {
 }
 
 /// Taille de page : derniers N messages à l'ouverture, puis +N au scroll.
-const int kMessagePageSize = 20;
+const int kMessagePageSize = 10;

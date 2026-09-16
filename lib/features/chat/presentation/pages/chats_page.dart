@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/locale/app_strings.dart';
-import '../../../../core/router/app_route_path.dart';
 import '../../../../core/widgets/empty_list_placeholder.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../domain/entities/chat_entity.dart';
 import '../providers/chat_provider.dart';
-import '../utils/chat_display.dart';
-import '../widgets/chat_add_menu.dart';
-import '../widgets/chat_list_tile.dart';
+import '../utils/chat_actions.dart';
+import '../utils/chat_search.dart';
+import '../widgets/chats_body.dart';
 import '../widgets/chats_header.dart';
 
 class ChatsPage extends ConsumerStatefulWidget {
@@ -23,6 +23,7 @@ class ChatsPage extends ConsumerStatefulWidget {
 class _ChatsPageState extends ConsumerState<ChatsPage> {
   var _searching = false;
   final _searchController = TextEditingController();
+  String? _creatingChatFor;
 
   @override
   void dispose() {
@@ -30,21 +31,25 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
     super.dispose();
   }
 
-  Future<void> _openAddMenu() async {
-    final s = ref.read(appStringsProvider);
-    final action = await showChatAddMenu(
-      context,
-      addContactLabel: s.addContact,
-      createGroupLabel: s.createGroup,
-    );
+  void _toggleSearch() {
+    setState(() {
+      _searching = !_searching;
+      if (!_searching) _searchController.clear();
+    });
+  }
 
-    if (!mounted || action == null) return;
-
-    switch (action) {
-      case ChatAddMenuAction.addFriend:
-        context.push(AppRoutePath.newChatPath);
-      case ChatAddMenuAction.createGroup:
-        context.push(AppRoutePath.createGroupPath);
+  Future<void> _openContact(String userId, String otherUserId) async {
+    if (_creatingChatFor != null) return;
+    setState(() => _creatingChatFor = otherUserId);
+    try {
+      await openOrCreateDirectChat(
+        context: context,
+        ref: ref,
+        currentUserId: userId,
+        otherUserId: otherUserId,
+      );
+    } finally {
+      if (mounted) setState(() => _creatingChatFor = null);
     }
   }
 
@@ -70,128 +75,149 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
             searchController: _searchController,
             searchHint: s.search,
             searchTooltip: s.search,
-            addTooltip: s.add,
-            onToggleSearch: () {
-              setState(() {
-                _searching = !_searching;
-                if (!_searching) _searchController.clear();
-              });
-            },
+            onToggleSearch: _toggleSearch,
             onSearchChanged: () => setState(() {}),
-            onAdd: _openAddMenu,
           ),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 280),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.03),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
+            child: _FadeSlideBody(
               child: chatsAsync.when(
-                loading: () => const Center(
-                  key: ValueKey('chats-loading'),
-                  child: CircularProgressIndicator(),
-                ),
-                error: (error, _) => Center(
-                  key: const ValueKey('chats-error'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(error.toString(), textAlign: TextAlign.center),
+                loading: () => const _CenteredLoader(key: ValueKey('loading')),
+                error: (e, _) => _CenteredError(e, key: const ValueKey('error')),
+                data: (chats) => profilesAsync.when(
+                  loading: () =>
+                      const _CenteredLoader(key: ValueKey('profiles-loading')),
+                  error: (e, _) =>
+                      _CenteredError(e, key: const ValueKey('profiles-error')),
+                  data: (profiles) => _ChatsContent(
+                    key: ValueKey(query.isEmpty ? 'list' : 'search'),
+                    chats: chats,
+                    profiles: profiles,
+                    userId: user.id,
+                    query: query,
+                    strings: s,
+                    creatingChatFor: _creatingChatFor,
+                    onCompose: () => openChatComposeMenu(context, ref),
+                    onOpenContact: (id) => _openContact(user.id, id),
                   ),
                 ),
-                data: (chats) {
-                  if (chats.isEmpty) {
-                    return EmptyListPlaceholder(
-                      key: const ValueKey('chats-empty'),
-                      icon: Icons.forum_outlined,
-                      title: s.emptyChatsTitle,
-                      subtitle: s.emptyChatsSubtitle,
-                      buttonLabel: s.newChat,
-                      onAction: _openAddMenu,
-                    );
-                  }
-
-                  return profilesAsync.when(
-                    loading: () => const Center(
-                      key: ValueKey('chats-profiles-loading'),
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (error, _) => Center(
-                      key: const ValueKey('chats-profiles-error'),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          error.toString(),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    data: (profiles) {
-                      final filtered = chats.where((chat) {
-                        if (query.isEmpty) return true;
-                        final other = findOtherProfiles(
-                          participantIds: chat.participantIds,
-                          currentUserId: user.id,
-                          profiles: profiles,
-                        );
-                        final name = chatDisplayTitle(
-                          other,
-                          chatName: chat.name,
-                          emptyFallback: chat.participantIds.length > 2
-                              ? s.groupFallback
-                              : s.userFallback,
-                          multiFallback: s.groupFallback,
-                        ).toLowerCase();
-                        final last = (chat.lastMessage ?? '').toLowerCase();
-                        return name.contains(query) || last.contains(query);
-                      }).toList();
-
-                      if (filtered.isEmpty) {
-                        return Center(
-                          key: const ValueKey('chats-no-results'),
-                          child: Text(s.noChatsFound),
-                        );
-                      }
-
-                      return ListView.builder(
-                        key: const ValueKey('chats-list'),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final chat = filtered[index];
-                          final others = findOtherProfiles(
-                            participantIds: chat.participantIds,
-                            currentUserId: user.id,
-                            profiles: profiles,
-                          );
-                          return ChatListTile(
-                            chat: chat,
-                            others: others,
-                            currentUserId: user.id,
-                            userFallback: s.userFallback,
-                            groupFallback: s.groupFallback,
-                            noMessagePreview: s.noMessagePreview,
-                            yesterdayLabel: s.yesterday,
-                            weekdayLabels: s.weekdayShort,
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChatsContent extends StatelessWidget {
+  const _ChatsContent({
+    super.key,
+    required this.chats,
+    required this.profiles,
+    required this.userId,
+    required this.query,
+    required this.strings,
+    required this.creatingChatFor,
+    required this.onCompose,
+    required this.onOpenContact,
+  });
+
+  final List<ChatEntity> chats;
+  final List<ProfileEntity> profiles;
+  final String userId;
+  final String query;
+  final AppStrings strings;
+  final String? creatingChatFor;
+  final VoidCallback onCompose;
+  final ValueChanged<String> onOpenContact;
+
+  @override
+  Widget build(BuildContext context) {
+    if (query.isNotEmpty) {
+      return ChatsSearchResults(
+        result: searchChatsAndContacts(
+          chats: chats,
+          profiles: profiles,
+          userId: userId,
+          query: query,
+          userFallback: strings.userFallback,
+          groupFallback: strings.groupFallback,
+        ),
+        profiles: profiles,
+        userId: userId,
+        query: query,
+        strings: strings,
+        creatingChatFor: creatingChatFor,
+        onOpenContact: onOpenContact,
+      );
+    }
+
+    if (chats.isEmpty) {
+      return EmptyListPlaceholder(
+        icon: Icons.forum_outlined,
+        title: strings.emptyChatsTitle,
+        subtitle: strings.emptyChatsSubtitle,
+        buttonLabel: strings.newChat,
+        onAction: onCompose,
+      );
+    }
+
+    return ChatsConversationList(
+      chats: chats,
+      profiles: profiles,
+      userId: userId,
+      strings: strings,
+    );
+  }
+}
+
+class _FadeSlideBody extends StatelessWidget {
+  const _FadeSlideBody({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.03),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _CenteredLoader extends StatelessWidget {
+  const _CenteredLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator());
+}
+
+class _CenteredError extends StatelessWidget {
+  const _CenteredError(this.error, {super.key});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text('$error', textAlign: TextAlign.center),
       ),
     );
   }

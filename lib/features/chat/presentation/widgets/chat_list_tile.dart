@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/locale/app_strings.dart';
 import '../../../../core/router/app_route_path.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/date_format.dart';
@@ -23,6 +24,32 @@ class ChatListTile extends StatelessWidget {
     this.weekdayLabels,
     this.leadingIsGroup = false,
   });
+
+  factory ChatListTile.fromData({
+    Key? key,
+    required ChatEntity chat,
+    required List<ProfileEntity> profiles,
+    required String currentUserId,
+    required AppStrings strings,
+    bool leadingIsGroup = false,
+  }) {
+    return ChatListTile(
+      key: key,
+      chat: chat,
+      others: findOtherProfiles(
+        participantIds: chat.participantIds,
+        currentUserId: currentUserId,
+        profiles: profiles,
+      ),
+      currentUserId: currentUserId,
+      userFallback: strings.userFallback,
+      groupFallback: strings.groupFallback,
+      noMessagePreview: strings.noMessagePreview,
+      yesterdayLabel: strings.yesterday,
+      weekdayLabels: strings.weekdayShort,
+      leadingIsGroup: leadingIsGroup,
+    );
+  }
 
   final ChatEntity chat;
   final List<ProfileEntity> others;
