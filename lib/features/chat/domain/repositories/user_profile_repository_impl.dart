@@ -23,6 +23,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
+  Future<void> setUserOnline(String uid) async {
+    try {
+      await remoteDataSource.setUserOnline(uid);
+    } catch (error) {
+      throw _wrap(error, 'Impossible de mettre le profil en ligne.');
+    }
+  }
+
+  @override
   Future<void> setUserOffline(String uid) async {
     try {
       await remoteDataSource.setUserOffline(uid);

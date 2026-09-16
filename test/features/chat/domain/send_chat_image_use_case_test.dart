@@ -40,6 +40,17 @@ class _FakeStorage implements ChatMediaStorage {
     lastSenderId = senderId;
     return 'https://cdn.example/chats/$chatId/images/1.jpg';
   }
+
+  @override
+  Future<String> uploadAudio({
+    required String chatId,
+    required String senderId,
+    required String localPath,
+    String contentType = 'audio/m4a',
+    String fileExtension = 'm4a',
+  }) async {
+    return 'https://cdn.example/chats/$chatId/audio/1.m4a';
+  }
 }
 
 void main() {

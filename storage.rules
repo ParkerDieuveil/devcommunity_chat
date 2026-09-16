@@ -21,9 +21,20 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    function isValidAudio() {
+      return request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*');
+    }
+
     match /chats/{chatId}/images/{fileName} {
       allow read: if isChatParticipant(chatId);
       allow create, update: if isChatParticipant(chatId) && isValidImage();
+      allow delete: if isChatParticipant(chatId);
+    }
+
+    match /chats/{chatId}/audio/{fileName} {
+      allow read: if isChatParticipant(chatId);
+      allow create, update: if isChatParticipant(chatId) && isValidAudio();
       allow delete: if isChatParticipant(chatId);
     }
 

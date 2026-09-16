@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_route_path.dart';
+import '../../../../core/locale/app_strings.dart';
+import '../../../../core/widgets/app_secondary_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/domain/entities/profile.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
-import '../providers/chat_provider.dart';
+import '../utils/chat_actions.dart';
+import '../utils/chat_search.dart';
+import '../widgets/chat_list_tile.dart';
+import '../widgets/invite_not_registered_card.dart';
+import '../widgets/user_contact_tile.dart';
 
+/// Recherche d'un contact par email (ou nom) pour démarrer un chat 1:1.
 class NewChatPage extends ConsumerStatefulWidget {
   const NewChatPage({super.key});
 
@@ -15,19 +22,15 @@ class NewChatPage extends ConsumerStatefulWidget {
 }
 
 class _NewChatPageState extends ConsumerState<NewChatPage> {
-  final TextEditingController _searchController = TextEditingController();
-
-  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  String _query = '';
   String? _creatingChatFor;
 
   @override
   void initState() {
     super.initState();
-
     _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.trim().toLowerCase();
-      });
+      setState(() => _query = _searchController.text.trim().toLowerCase());
     });
   }
 
@@ -37,234 +40,136 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
     super.dispose();
   }
 
+  Future<void> _startChat(String currentUserId, String otherUserId) async {
+    if (_creatingChatFor != null) return;
+    setState(() => _creatingChatFor = otherUserId);
+    try {
+      await openOrCreateDirectChat(
+        context: context,
+        ref: ref,
+        currentUserId: currentUserId,
+        otherUserId: otherUserId,
+      );
+    } finally {
+      if (mounted) setState(() => _creatingChatFor = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final profilesAsync = ref.watch(profilesProvider);
+    final s = ref.watch(appStringsProvider);
 
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Session requise'),
-        ),
-      );
+      return Scaffold(body: Center(child: Text(s.sessionRequired)));
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nouveau chat'),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
+          AppSecondaryHeader(title: s.addContact, onBack: () => context.pop()),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: TextField(
               controller: _searchController,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
               decoration: InputDecoration(
-                hintText: 'Rechercher un développeur...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
+                hintText: s.searchByEmail,
+                prefixIcon: const Icon(Icons.email_outlined),
+                suffixIcon: _query.isNotEmpty
                     ? IconButton(
-                  onPressed: _searchController.clear,
-                  icon: const Icon(Icons.clear),
-                )
+                        onPressed: _searchController.clear,
+                        icon: const Icon(Icons.clear),
+                      )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
           ),
           Expanded(
             child: profilesAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(
-                    'Impossible de charger les utilisateurs.\n\n$error',
+                    '${s.loadUsersFailed}.\n\n$error',
                     textAlign: TextAlign.center,
                   ),
                 ),
               ),
-              data: (profiles) {
-                final users = profiles
-                    .where((profile) => profile.id != currentUser.id)
-                    .where(_matchesSearch)
-                    .toList();
-
-                if (users.isEmpty) {
-                  return Center(
-                    child: Text(
-                      _searchQuery.isEmpty
-                          ? 'Aucun autre utilisateur disponible'
-                          : 'Aucun utilisateur trouvé',
-                    ),
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: users.length,
-                  separatorBuilder: (_, _) => const Divider(
-                    height: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    final profile = users[index];
-
-                    return _UserTile(
-                      displayName: profile.displayname,
-                      email: profile.email,
-                      photoUrl: profile.photoUrl,
-                      loading: _creatingChatFor == profile.id,
-                      onTap: () => _createChat(
-                        currentUser.id,
-                        profile.id,
-                      ),
-                    );
-                  },
-                );
-              },
+              data: (profiles) => _NewChatResults(
+                query: _query,
+                strings: s,
+                users: profiles
+                    .where((p) => p.id != currentUser.id)
+                    .where(
+                      (p) => _query.isNotEmpty && matchesProfile(p, _query),
+                    )
+                    .toList(),
+                creatingChatFor: _creatingChatFor,
+                onStartChat: (id) => _startChat(currentUser.id, id),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-
-  bool _matchesSearch(dynamic profile) {
-    if (_searchQuery.isEmpty) {
-      return true;
-    }
-
-    final name = profile.displayname.toLowerCase();
-    final email = profile.email.toLowerCase();
-
-    return name.contains(_searchQuery) ||
-        email.contains(_searchQuery);
-  }
-
-  Future<void> _createChat(
-      String currentUserId,
-      String otherUserId,
-      ) async {
-    if (_creatingChatFor != null) {
-      return;
-    }
-
-    setState(() {
-      _creatingChatFor = otherUserId;
-    });
-
-    try {
-      final chatId = await ref
-          .read(createChatUseCaseProvider)
-          .call([
-        currentUserId,
-        otherUserId,
-      ]);
-
-      if (!mounted) {
-        return;
-      }
-
-      context.push(
-        AppRoutePath.chatDetail(chatId),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Impossible de créer la conversation : $error',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _creatingChatFor = null;
-        });
-      }
-    }
-  }
 }
 
-class _UserTile extends StatelessWidget {
-  const _UserTile({
-    required this.displayName,
-    required this.email,
-    required this.photoUrl,
-    required this.loading,
-    required this.onTap,
+class _NewChatResults extends StatelessWidget {
+  const _NewChatResults({
+    required this.query,
+    required this.strings,
+    required this.users,
+    required this.creatingChatFor,
+    required this.onStartChat,
   });
 
-  final String displayName;
-  final String email;
-  final String photoUrl;
-  final bool loading;
-  final VoidCallback onTap;
+  final String query;
+  final AppStrings strings;
+  final List<ProfileEntity> users;
+  final String? creatingChatFor;
+  final ValueChanged<String> onStartChat;
 
   @override
   Widget build(BuildContext context) {
-    final name = displayName.trim().isEmpty
-        ? email
-        : displayName;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 6,
-      ),
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundImage: photoUrl.trim().isNotEmpty
-            ? NetworkImage(photoUrl)
-            : null,
-        child: photoUrl.trim().isEmpty
-            ? Text(
-          _initial(name),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        )
-            : null,
-      ),
-      title: Text(
-        name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        email,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: loading
-          ? const SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-        ),
-      )
-          : const Icon(Icons.chat_outlined),
-      onTap: loading ? null : onTap,
-    );
-  }
-
-  String _initial(String name) {
-    final trimmed = name.trim();
-
-    if (trimmed.isEmpty) {
-      return '?';
+    if (query.isEmpty) {
+      return SearchEmptyIllustration(
+        message: strings.searchEmailPrompt,
+        size: 220,
+      );
     }
 
-    return trimmed[0].toUpperCase();
+    if (users.isEmpty) {
+      if (looksLikeEmail(query)) {
+        return InviteNotRegisteredCard(query: query, strings: strings);
+      }
+      return SearchEmptyIllustration(message: strings.noUsersFound(query));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: users.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final profile = users[index];
+        return UserContactTile(
+          displayName: profile.displayname,
+          email: profile.email,
+          photoUrl: profile.photoUrl,
+          isOnline: profile.isEffectivelyOnline,
+          loading: creatingChatFor == profile.id,
+          startChatTooltip: strings.startChat,
+          onTap: () => onStartChat(profile.id),
+        );
+      },
+    );
   }
 }

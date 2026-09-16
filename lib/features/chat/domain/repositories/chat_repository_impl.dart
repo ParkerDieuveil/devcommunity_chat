@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/datasources/chat_remote_data_source.dart';
 import '../entities/chat_entity.dart';
 import '../entities/message_entity.dart';
+import '../entities/messages_page.dart';
 import '../exceptions/chat_exceptions.dart';
 import 'chat_repository.dart';
 
@@ -21,6 +22,7 @@ class ChatRepositoryImpl implements ChatRepository {
       throw _wrap(error, 'Impossible de charger les conversations.');
     }
   }
+
   @override
   Future<void> markMessagesAsRead({
     required String chatId,
@@ -31,14 +33,37 @@ class ChatRepositoryImpl implements ChatRepository {
       userId: userId,
     );
   }
+
   @override
-  Stream<List<MessageEntity>> watchMessages(String chatId) {
+  Stream<List<MessageEntity>> watchMessages(
+    String chatId, {
+    int limit = kMessagePageSize,
+  }) {
     try {
-      return remoteDataSource.watchMessages(chatId).handleError((error, stack) {
+      return remoteDataSource
+          .watchMessages(chatId, limit: limit)
+          .handleError((error, stack) {
         throw _wrap(error, 'Impossible de charger les messages.');
       });
     } catch (error) {
       throw _wrap(error, 'Impossible de charger les messages.');
+    }
+  }
+
+  @override
+  Future<MessagesPage> fetchOlderMessages({
+    required String chatId,
+    required String beforeMessageId,
+    int limit = kMessagePageSize,
+  }) async {
+    try {
+      return await remoteDataSource.fetchOlderMessages(
+        chatId: chatId,
+        beforeMessageId: beforeMessageId,
+        limit: limit,
+      );
+    } catch (error) {
+      throw _wrap(error, 'Impossible de charger les messages précédents.');
     }
   }
 
@@ -53,6 +78,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String senderId,
     String? text,
     String? imageUrl,
+    String? audioUrl,
   }) async {
     try {
       await remoteDataSource.sendMessage(
@@ -60,6 +86,7 @@ class ChatRepositoryImpl implements ChatRepository {
         senderId: senderId,
         text: text,
         imageUrl: imageUrl,
+        audioUrl: audioUrl,
       );
     } catch (error) {
       throw _wrap(error, 'Impossible d’envoyer le message.');
@@ -67,9 +94,15 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<String> createChat(List<String> participantIds) async {
+  Future<String> createChat(
+    List<String> participantIds, {
+    String? name,
+  }) async {
     try {
-      return await remoteDataSource.createChat(participantIds);
+      return await remoteDataSource.createChat(
+        participantIds,
+        name: name,
+      );
     } catch (error) {
       throw _wrap(error, 'Impossible de créer la conversation.');
     }

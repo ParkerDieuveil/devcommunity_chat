@@ -4,13 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
-import 'package:devcommunitychat/core/theme/theme_mode_controller.dart';
 import 'package:devcommunitychat/features/auth/domain/entities/app_user.dart';
 import 'package:devcommunitychat/features/auth/presentation/providers/auth_provider.dart';
 import 'package:devcommunitychat/features/profile/domain/entities/profile.dart';
 import 'package:devcommunitychat/features/profile/presentation/pages/profile_page.dart';
 import 'package:devcommunitychat/features/profile/presentation/providers/profile_provider.dart';
-import 'package:devcommunitychat/features/profile/presentation/widgets/profile_theme_option.dart';
 
 import '../../fakes/fake_profile_repository.dart';
 
@@ -20,10 +18,8 @@ const _user = AppUser(
   displayName: 'Alexandre',
 );
 
-Future<SharedPreferences> _prefs({String? themeMode}) async {
-  SharedPreferences.setMockInitialValues({
-    'app_theme_mode': ?themeMode,
-  });
+Future<SharedPreferences> _prefs() async {
+  SharedPreferences.setMockInitialValues({});
   return SharedPreferences.getInstance();
 }
 
@@ -31,10 +27,10 @@ Future<void> _pumpProfilePage(
   WidgetTester tester, {
   required Stream<AppUser?> authStream,
   FakeProfileRepository? repository,
-  String? themeMode,
 }) async {
-  final prefs = await _prefs(themeMode: themeMode);
-  final fake = repository ??
+  final prefs = await _prefs();
+  final fake =
+      repository ??
       FakeProfileRepository(
         profile: ProfileEntity(
           id: 'user-123',
@@ -44,6 +40,7 @@ Future<void> _pumpProfilePage(
           photoUrl: '',
           title: 'Flutter Dev',
           createdAt: DateTime(2024, 3, 1),
+          lastSeen: DateTime.now(),
           isOnline: true,
         ),
       );
@@ -99,7 +96,7 @@ void main() {
   });
 
   group('ProfilePage - données réelles', () {
-    testWidgets('affiche bio, titre et stats issus du profil / chats', (
+    testWidgets('affiche bio, titre et meta issus du profil / chats', (
       tester,
     ) async {
       await _pumpProfilePage(tester, authStream: Stream.value(_user));
@@ -107,47 +104,15 @@ void main() {
 
       expect(find.text('Alexandre'), findsOneWidget);
       expect(find.text('Bio de test'), findsOneWidget);
-      expect(find.textContaining('Flutter Dev'), findsOneWidget);
+      expect(find.text('Flutter Dev'), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
-      expect(find.text('Salons'), findsOneWidget);
       expect(find.text('En ligne'), findsOneWidget);
-      expect(find.textContaining('mars 2024'), findsOneWidget);
+      expect(find.text('mars 2024'), findsOneWidget);
     });
   });
 
   group('ProfilePage - interactions', () {
-    testWidgets('changer de thème met à jour la sélection et le provider', (
-      tester,
-    ) async {
-      await _pumpProfilePage(
-        tester,
-        authStream: Stream.value(_user),
-        themeMode: 'dark',
-      );
-      await tester.pumpAndSettle();
-
-      ProfileThemeOption optionFor(String title) =>
-          tester.widget(find.widgetWithText(ProfileThemeOption, title));
-
-      expect(optionFor('Sombre').isSelected, isTrue);
-      expect(optionFor('Clair').isSelected, isFalse);
-
-      await tester.ensureVisible(find.text('Clair'));
-      await tester.tap(find.text('Clair'));
-      await tester.pumpAndSettle();
-
-      expect(optionFor('Clair').isSelected, isTrue);
-      expect(optionFor('Sombre').isSelected, isFalse);
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(ProfilePage)),
-      );
-      expect(container.read(themeModeProvider), ThemeMode.light);
-    });
-
-    testWidgets('ouvre la boîte de dialogue d\'édition pré-remplie', (
-      tester,
-    ) async {
+    testWidgets('ouvre la feuille d\'édition pré-remplie', (tester) async {
       await _pumpProfilePage(tester, authStream: Stream.value(_user));
       await tester.pumpAndSettle();
 
@@ -156,7 +121,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-      expect(textFields, findsNWidgets(3));
+      expect(textFields, findsNWidgets(4));
       expect(
         tester.widget<TextField>(textFields.at(0)).controller?.text,
         'Alexandre',
@@ -169,10 +134,14 @@ void main() {
         tester.widget<TextField>(textFields.at(2)).controller?.text,
         'Bio de test',
       );
+      expect(
+        tester.widget<TextField>(textFields.at(3)).controller?.text,
+        'alex@example.com',
+      );
 
       await tester.tap(find.text('Annuler'));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Modifier le profil'), findsNothing);
     });
   });
 
@@ -203,7 +172,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-      expect(textFields, findsNWidgets(3));
+      expect(textFields, findsNWidgets(4));
 
       await tester.enterText(textFields.at(0), 'Jean Dupont');
       await tester.enterText(textFields.at(1), 'Staff Engineer');
@@ -220,7 +189,7 @@ void main() {
       expect(fakeRepository.profile?.displayname, 'Jean Dupont');
       expect(fakeRepository.profile?.title, 'Staff Engineer');
       expect(fakeRepository.profile?.bio, 'Développeur Flutter passionné');
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Modifier le profil'), findsNothing);
       expect(find.text('Profil mis à jour.'), findsOneWidget);
     });
   });

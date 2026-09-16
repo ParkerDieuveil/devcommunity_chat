@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
 import 'package:devcommunitychat/features/auth/presentation/pages/login_page.dart';
+
+import '../../../../helpers/test_prefs.dart';
 
 void main() {
   group('LoginPage', () {
     Future<void> pumpLoginPage(WidgetTester tester) async {
+      final prefs = await mockSharedPreferences();
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: LoginPage())),
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const MaterialApp(home: LoginPage()),
+        ),
       );
     }
 
@@ -57,7 +64,7 @@ void main() {
 
       await tester.enterText(
         find.byType(TextFormField).at(0),
-        'test@example.com',
+        'marie.dupont@gmail.com',
       );
 
       await tester.tap(find.text('Se connecter'));

@@ -15,6 +15,9 @@ class ProfileEntity {
   final DateTime? lastSeen;
   final bool isOnline;
 
+  /// Au-delà de ce délai sans heartbeat, on n'affiche plus « en ligne ».
+  static const presenceTtl = Duration(minutes: 2);
+
   const ProfileEntity({
     required this.id,
     required this.displayname,
@@ -27,6 +30,16 @@ class ProfileEntity {
     this.lastSeen,
     this.isOnline = false,
   });
+
+  /// Présence affichable : flag Firestore + `lastSeen` récent (anti-faux positifs).
+  bool get isEffectivelyOnline {
+    if (!isOnline) return false;
+    final seen = lastSeen;
+    if (seen == null) return false;
+    final age = DateTime.now().difference(seen);
+    if (age.isNegative) return true;
+    return age <= presenceTtl;
+  }
 
   ProfileEntity copyWith({
     String? id,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/locale/app_strings.dart';
+import '../../../../core/utils/form_validators.dart';
 import '../providers/auth_controller.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -21,6 +23,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  String? _emailServerError;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -30,18 +34,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Future<void> _register() async {
+    setState(() => _emailServerError = null);
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
 
-    await ref.read(authControllerProvider.notifier).register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    await ref
+        .read(authControllerProvider.notifier)
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     if (!mounted) return;
 
     final authState = ref.read(authControllerProvider);
+    final s = ref.read(appStringsProvider);
 
     authState.whenOrNull(
       data: (user) {
@@ -50,71 +58,74 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         }
       },
       error: (error, _) {
+        final message = error is String ? error : _getErrorMessage(error, s);
+        final emailRelated = _isEmailRelatedError(message, s);
+
+        setState(() {
+          _emailServerError = emailRelated ? message : null;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_getErrorMessage(error)),
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
         );
       },
     );
   }
 
-  String _getErrorMessage(Object error) {
+  bool _isEmailRelatedError(String message, AppStrings s) {
+    final lower = message.toLowerCase();
+    return lower.contains('déjà utilisée') ||
+        lower.contains('already') ||
+        lower.contains('invalide') ||
+        lower.contains('invalid') ||
+        message == s.authEmailInUse ||
+        message == s.invalidEmail;
+  }
+
+  String _getErrorMessage(Object error, AppStrings s) {
     final message = error.toString().toLowerCase();
 
-    if (message.contains('email-already-in-use')) {
-      return 'Cette adresse email est déjà utilisée.';
+    if (message.contains('email-already-in-use') ||
+        message.contains('déjà utilisée')) {
+      return s.authEmailInUse;
     }
 
-    if (message.contains('invalid-email')) {
-      return 'Veuillez entrer une adresse email valide.';
+    if (message.contains('invalid-email') || message.contains('invalide')) {
+      return s.invalidEmail;
     }
 
-    if (message.contains('weak-password')) {
-      return 'Le mot de passe est trop faible.';
+    if (message.contains('weak-password') || message.contains('faible')) {
+      return s.authWeakPassword;
     }
 
-    return 'Impossible de créer le compte. Veuillez réessayer.';
+    return s.registerFailed;
   }
 
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-
-    if (email.isEmpty) {
-      return 'Veuillez entrer votre email.';
-    }
-
-    final emailRegex = RegExp(
-      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-    );
-
-    if (!emailRegex.hasMatch(email)) {
-      return 'Veuillez entrer une adresse email valide.';
-    }
-
-    return null;
+  String? _validateEmail(String? value, AppStrings s) {
+    final formatError = validateEmail(value, s);
+    if (formatError != null) return formatError;
+    return _emailServerError;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, AppStrings s) {
     if (value == null || value.isEmpty) {
-      return 'Veuillez entrer votre mot de passe.';
+      return s.passwordRequired;
     }
 
     if (value.length < 6) {
-      return 'Minimum 6 caractères.';
+      return s.passwordMinLength;
     }
 
     return null;
   }
 
-  String? _validateConfirmation(String? value) {
+  String? _validateConfirmation(String? value, AppStrings s) {
     if (value == null || value.isEmpty) {
-      return 'Veuillez confirmer votre mot de passe.';
+      return s.confirmPasswordRequired;
     }
 
     if (value != _passwordController.text) {
-      return 'Les mots de passe ne correspondent pas.';
+      return s.passwordsDoNotMatch;
     }
 
     return null;
@@ -123,97 +134,81 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final s = ref.watch(appStringsProvider);
     final isLoading = authState.isLoading;
 
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 32,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
               child: Form(
                 key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.person_add_alt_1_rounded,
-                          size: 38,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                      child: Image.asset(
+                        'assets/images/dev.png',
+                        width: 110,
+                        height: 110,
+                        fit: BoxFit.contain,
                       ),
                     ),
-
-                    const SizedBox(height: 24),
-
-                    const Text(
-                      'Rejoignez DevCommunity',
+                    const SizedBox(height: 16),
+                    Text(
+                      s.appName,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
-                      'Créez votre compte et rejoignez la communauté.',
+                      s.registerSubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 15,
                       ),
                     ),
-
                     const SizedBox(height: 36),
-
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autocorrect: false,
+                      onChanged: (_) {
+                        if (_emailServerError != null) {
+                          setState(() => _emailServerError = null);
+                        }
+                      },
                       decoration: InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'vous@example.com',
+                        labelText: s.email,
+                        hintText: s.emailHint,
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: _validateEmail,
+                      validator: (v) => _validateEmail(v, s),
                     ),
-
                     const SizedBox(height: 18),
-
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
-                        labelText: 'Mot de passe',
+                        labelText: s.password,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip: _obscurePassword
-                              ? 'Afficher le mot de passe'
-                              : 'Masquer le mot de passe',
+                              ? s.showPassword
+                              : s.hidePassword,
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_outlined
@@ -229,11 +224,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: _validatePassword,
+                      validator: (v) => _validatePassword(v, s),
                     ),
-
                     const SizedBox(height: 18),
-
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -242,12 +235,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         if (!isLoading) _register();
                       },
                       decoration: InputDecoration(
-                        labelText: 'Confirmer le mot de passe',
+                        labelText: s.confirmPassword,
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
                         suffixIcon: IconButton(
                           tooltip: _obscureConfirmPassword
-                              ? 'Afficher le mot de passe'
-                              : 'Masquer le mot de passe',
+                              ? s.showPassword
+                              : s.hidePassword,
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_outlined
@@ -256,7 +249,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           onPressed: () {
                             setState(() {
                               _obscureConfirmPassword =
-                              !_obscureConfirmPassword;
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -264,11 +257,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      validator: _validateConfirmation,
+                      validator: (v) => _validateConfirmation(v, s),
                     ),
-
                     const SizedBox(height: 28),
-
                     SizedBox(
                       height: 54,
                       child: FilledButton(
@@ -280,41 +271,41 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         child: isLoading
                             ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                            : const Text(
-                          'Créer mon compte',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                s.signUp,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          'Vous avez déjà un compte ? ',
+                          s.alreadyHaveAccount,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         TextButton(
-                          onPressed: isLoading ? null : () => context.go('/login'),
-                          child: const Text(
-                            'Se connecter',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          onPressed: isLoading
+                              ? null
+                              : () => context.go('/login'),
+                          child: Text(
+                            s.signIn,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],

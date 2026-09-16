@@ -1,558 +1,354 @@
-# 💬 DevCommunity Chat
+# DevCommunity Chat
 
-> **Connecter les développeurs. Faciliter les échanges. Construire la communauté.**
+> Connecter les développeurs. Faciliter les échanges. Construire la communauté.
 
-**DevCommunity Chat** est une application mobile de communication développée avec **Flutter et Firebase** dans le cadre du **FlutterFire Summer Camp 2026 – Groupe 8**.
+**DevCommunity Chat** est une application mobile de messagerie d’équipe, développée avec **Flutter** et **Firebase** dans le cadre du **FlutterFire Summer Camp 2026 (Groupe 8)**.
 
-L'application a pour objectif de fournir aux développeurs et aux communautés technologiques un espace dédié permettant de **communiquer, échanger des messages, créer des conversations, interagir avec des groupes et gérer son profil** depuis une application mobile moderne.
-
----
-
-## 📱 Présentation
-
-Les communautés de développeurs ont besoin d'espaces où leurs membres peuvent communiquer rapidement, partager des informations et maintenir leurs échanges au même endroit.
-
-DevCommunity Chat propose une expérience de messagerie orientée communauté avec :
-
-* 🔐 authentification sécurisée ;
-* 💬 conversations entre utilisateurs ;
-* 👥 communication au sein de groupes ;
-* ⚡ synchronisation en temps réel ;
-* 🖼️ partage d'images dans les conversations ;
-* 👤 profils utilisateurs ;
-* 📸 gestion de l'avatar ;
-* 🌙 thème clair et sombre ;
-* 🧭 navigation structurée ;
-* 🔄 persistance de la session utilisateur.
+Elle offre un espace dédié pour communiquer, créer des conversations, animer des groupes et gérer un profil, avec une expérience claire et adaptée aux communautés techniques.
 
 ---
 
-# 🎯 Objectifs du projet
+## Présentation
 
-Le projet poursuit plusieurs objectifs :
+Les équipes et communautés de développeurs ont besoin d’un canal simple pour échanger rapidement, partager des médias et garder le contexte au même endroit.
+
+DevCommunity Chat propose notamment :
+
+* authentification sécurisée ;
+* conversations en temps réel ;
+* groupes nommés ;
+* partage d’images et de messages vocaux ;
+* profils et avatar ;
+* thème clair et sombre ;
+* interface bilingue (français / anglais) ;
+* navigation structurée ;
+* restauration de session au démarrage.
+
+---
+
+## Objectifs du projet
 
 ### 1. Créer un espace de communication dédié
 
-Permettre aux membres d'une communauté technologique de communiquer depuis une application mobile unique.
+Permettre aux membres d’une équipe ou d’une communauté technologique de communiquer depuis une application mobile unique.
 
 ### 2. Mettre en pratique Flutter et Firebase
 
-Le projet permet de mettre en œuvre concrètement :
+Le projet met en œuvre concrètement :
 
-* Flutter ;
-* Dart ;
+* Flutter et Dart ;
 * Firebase Authentication ;
 * Cloud Firestore ;
+* Firebase Storage ;
 * Riverpod ;
-* navigation déclarative ;
+* navigation déclarative (GoRouter) ;
 * architecture logicielle ;
 * tests automatisés.
 
 ### 3. Appliquer une architecture maintenable
 
-L'application est organisée autour d'une approche inspirée de la **Clean Architecture**, afin de séparer l'interface utilisateur, la logique métier et l'accès aux données.
+L’application s’appuie sur une organisation inspirée de la **Clean Architecture**, afin de séparer l’interface utilisateur, la logique métier et l’accès aux données.
 
 ### 4. Travailler comme une équipe
 
-Le développement est réalisé avec Git et GitHub à travers des branches, Pull Requests, revues de code, tests et intégrations progressives.
+Le développement suit un workflow Git et GitHub : branches thématiques, Pull Requests, revues, tests et intégrations progressives vers `develop`.
 
 ---
 
-# ✨ Fonctionnalités
+## Fonctionnalités
 
-## 🔐 Authentification
+### Authentification
 
-DevCommunity Chat utilise **Firebase Authentication** pour gérer les comptes utilisateurs.
-
-Fonctionnalités :
+Gestion des comptes avec **Firebase Authentication** :
 
 * inscription par email et mot de passe ;
-* connexion ;
-* déconnexion ;
-* récupération de l'utilisateur courant ;
-* observation des changements d'état d'authentification ;
-* gestion des erreurs Firebase ;
-* protection des routes selon l'état de connexion ;
-* persistance de la session.
+* connexion et déconnexion ;
+* observation de l’état de session ;
+* protection des routes selon l’état de connexion ;
+* validation renforcée des emails (refus des adresses de test / démo) ;
+* messages d’erreur exploitables côté interface.
 
-### 🔄 Restauration de session
+### Restauration de session
 
-Au démarrage de l'application, un écran de démarrage laisse le temps à Firebase de restaurer la session existante avant que le routeur décide de la destination de l'utilisateur.
+Au lancement, un écran de démarrage laisse le temps à Firebase de restaurer la session avant que le routeur choisisse la destination.
 
 ```text
                  Lancement
-                     │
-                     ▼
+                     |
+                     v
                   Splash
-                     │
-                     ▼
+                     |
+                     v
           Restauration de session
-                     │
-              ┌──────┴──────┐
-              │             │
+                     |
+              +------+------+
+              |             |
           Connecté      Non connecté
-              │             │
-              ▼             ▼
+              |             |
+              v             v
             Home           Login
 ```
 
-Ainsi, un utilisateur qui s'est déjà connecté peut fermer puis rouvrir l'application sans être renvoyé inutilement vers l'écran de connexion.
+Un utilisateur déjà authentifié peut donc rouvrir l’application sans repasser inutilement par l’écran de connexion.
 
----
+### Onboarding
 
-# 💬 Messagerie
+Au premier lancement, un parcours d’introduction présente le produit (discussions d’équipe, médias, profil, temps réel Firebase). L’état « déjà vu » est persisté localement via SharedPreferences.
 
-Le module de chat utilise **Cloud Firestore** comme source de données.
+### Messagerie
 
-Il permet notamment :
+Le module de chat s’appuie sur **Cloud Firestore** :
 
-* d'afficher les conversations ;
-* de créer une nouvelle conversation ;
-* d'ouvrir une conversation ;
-* d'afficher les messages ;
-* d'envoyer des messages ;
-* de recevoir les changements en temps réel ;
-* de gérer les conversations associées à l'utilisateur.
+* liste des conversations avec **badges de non-lus** (style messagerie) ;
+* recherche unifiée (discussions + contacts) depuis l’écran Chats ;
+* création d’un chat 1:1 avec **réutilisation du même `chatId`** pour une paire d’utilisateurs ;
+* invitation (copie presse-papiers) si l’email recherché n’a pas encore de compte — **pas de fausse discussion** ;
+* création de groupes avec **nom persisté** ;
+* envoi et réception de messages texte en temps réel ;
+* **pagination / lazy loading** des messages (10 récents à l’ouverture, +10 au scroll vers le haut) ;
+* affichage via `ListView.builder` ;
+* bulles style Messenger / WhatsApp (couleurs clair / sombre) ;
+* accusés de lecture (`readBy`) : coches ✓ / ✓✓, appui long « Vu par », **mini-avatars** sous le dernier message lu (style Messenger) ;
+* marquage des messages lus (remet le compteur à zéro) ;
+* prévisualisation et horodatage localisés (FR / EN).
 
-Les données sont observées avec des `StreamProvider` Riverpod afin que l'interface puisse automatiquement réagir aux changements de Firestore.
+Les flux sont exposés via des `StreamProvider` Riverpod, ce qui permet à l’interface de réagir automatiquement aux mises à jour Firestore.
 
-### Architecture simplifiée
+Flux simplifié :
 
 ```text
              Flutter UI
-                 │
-                 ▼
+                 |
+                 v
           Riverpod Provider
-                 │
-                 ▼
+                 |
+                 v
              Use Case
-                 │
-                 ▼
+                 |
+                 v
             Repository
-                 │
-                 ▼
+                 |
+                 v
        Remote Data Source
-                 │
-                 ▼
+                 |
+                 v
            Cloud Firestore
 ```
 
----
+### Médias dans les conversations
 
-# 🖼️ Messages avec images
+L’application permet d’envoyer :
 
-Le projet comprend également une fonctionnalité permettant de travailler avec des **images dans les conversations**.
+* des **images** (caméra ou galerie) ;
+* des **messages vocaux**.
 
-Les éléments concernés comprennent notamment :
+Le panneau de pièces jointes n’expose que les actions réellement supportées (caméra, enregistrement, galerie).
 
-* sélection d'une image ;
-* traitement de l'image ;
-* détermination du type MIME ;
-* préparation de l'envoi ;
-* use case dédié à l'envoi d'image ;
-* affichage des images dans les messages.
+Dépendances principales : `image_picker`, `image`, `mime`, `record`, `audioplayers`, `firebase_storage`.
 
-Les dépendances utilisées comprennent notamment :
+#### Note Firebase Storage
 
-* `image_picker`
-* `image`
-* `mime`
-* `firebase_storage`
+L’upload dépend de l’activation et de la configuration du bucket Storage sur le projet Firebase, ainsi que des règles de sécurité déployées. Une erreur `404 Not Found` côté Storage indique en général un bucket non provisionné, indépendamment de la logique Flutter.
 
-### ⚠️ Limitation de l'environnement Firebase
+### Conversations et groupes
 
-La fonctionnalité d'upload vers Firebase Storage dépend de la configuration et du forfait Firebase utilisé.
+La navigation principale distingue clairement :
 
-Dans l'environnement actuel du projet, certaines opérations Storage peuvent être limitées par les restrictions du forfait gratuit. Cette contrainte est donc distinguée de la logique Flutter développée pour la fonctionnalité.
+* **Chats** : conversations (1:1 et groupes) ;
+* **Groupes** : filtre dédié aux conversations multi-participants ;
+* **Profil** : informations et édition ;
+* **Plus** : langue, thème, informations.
 
----
+Le bouton **« + »** central (FAB docké dans l’encoche de la barre) ouvre le menu nouveau contact / nouveau groupe.
 
-# 👥 Conversations et groupes
+Les groupes créés portent un nom visible dans les listes et l’en-tête de conversation.
 
-L'application prévoit une organisation des échanges autour des conversations et des groupes.
-
-La navigation principale permet de distinguer les différents espaces de communication et d'accéder aux conversations correspondantes.
-
-L'objectif est de permettre à l'application d'évoluer d'une simple messagerie individuelle vers un véritable espace de communication communautaire.
-
----
-
-# 👤 Profil utilisateur
-
-Le module Profile permet de gérer les informations liées à l'utilisateur.
-
-Il comprend notamment :
+### Profil utilisateur
 
 * affichage du profil ;
-* récupération du profil depuis Firestore ;
-* observation des profils ;
-* gestion de l'utilisateur courant ;
-* gestion de l'avatar ;
-* synchronisation de certaines informations avec Firebase Authentication.
+* édition (pseudo, titre, bio) ;
+* avatar ;
+* synchronisation avec les données Firestore / Auth ;
+* **présence en ligne réelle** (`isOnline` / `lastSeen` Firestore) : pastille sur les avatars, libellé dans le profil et l’en-tête de conversation ;
+* cycle de vie app + heartbeat (pas de mock) : online à la reprise, offline en arrière-plan / logout ; affichage seulement si `lastSeen` est récent.
 
-Le projet utilise également des providers Riverpod dédiés au profil.
+### Thème et localisation
 
----
+* thème clair / sombre (préférence locale) ;
+* chaînes d’interface FR / EN via un provider de locale.
 
-# 📸 Avatar utilisateur
+### Expérience utilisateur
 
-Le projet contient une fonctionnalité dédiée à la gestion de l'avatar utilisateur.
+Des transitions légères (fade / slide) animent notamment :
 
-L'architecture prévoit notamment un contrôleur :
+* l’ouverture du panneau de pièces jointes ;
+* le passage entre états de liste (chargement, vide, contenu).
 
-```text
-ProfileAvatarController
-```
-
-avec un état basé sur :
-
-```text
-AsyncValue<void>
-```
-
-afin de représenter les états de l'opération :
-
-```text
-Loading → Success
-        ↘ Error
-```
+La barre de navigation utilise une **encoche** (`CircularNotchedRectangle`) pour accueillir le FAB « + », avec un état sélectionné discret (icône / label brand, sans pavé concurrent).
 
 ---
 
-# 🌙 Thème clair et sombre
+## Navigation
 
-L'application possède une gestion du mode d'affichage avec un contrôleur dédié.
+Navigation déclarative avec **go_router**, reliée à l’état d’authentification et à l’onboarding.
 
-Le thème peut être géré à travers Riverpod et la préférence d'affichage peut être conservée localement.
-
-Le projet utilise :
+Espaces principaux une fois connecté :
 
 ```text
-SharedPreferences
+/home  →  Chats | Groupes | Profil | Plus
 ```
 
-pour les préférences locales qui ne nécessitent pas Firestore.
+Autres routes utiles :
 
----
-
-# 🧭 Navigation
-
-La navigation est construite avec **go_router**.
-
-Le projet possède notamment des routes pour :
-
-* authentification ;
-* accueil ;
-* profil ;
-* conversations ;
-* nouvelle conversation ;
-* détail d'une conversation ;
-* écran de démarrage.
-
-La navigation est également connectée à l'état d'authentification.
+* `/login`, `/register` ;
+* `/onboarding`, `/splash` ;
+* nouvelle discussion / création de groupe ;
+* détail d’une conversation.
 
 ```text
 Firebase Auth
-     │
-     ▼
+     |
+     v
 authStateProvider
-     │
-     ▼
+     |
+     v
 AuthRouterRefresh
-     │
-     ▼
-GoRouter
-     │
- ┌───┴────┐
- ▼        ▼
-Login    Home
+     |
+     v
+  GoRouter
+     |
+  +--+--+
+  |     |
+Login  Home
 ```
-
-Cela permet de protéger les écrans nécessitant une authentification et de rediriger automatiquement l'utilisateur lorsque son état de session change.
 
 ---
 
-# 🧠 Gestion d'état avec Riverpod
+## Gestion d’état avec Riverpod
 
-**Riverpod** est utilisé pour la gestion de l'état et l'injection des dépendances.
+Riverpod assure la gestion d’état et l’injection des dépendances (`Provider`, `StreamProvider`, `NotifierProvider`, etc.).
 
-Le projet utilise plusieurs types de providers, notamment :
-
-* `Provider`
-* `StreamProvider`
-* `StreamProvider.family`
-* `NotifierProvider`
-
-### Exemple : authentification
+Exemple authentification :
 
 ```text
 FirebaseAuth
-     ↓
+     |
 AuthRemoteDataSource
-     ↓
+     |
 AuthRepository
-     ↓
+     |
 Use Cases
-     ↓
+     |
 AuthController
-     ↓
+     |
 UI
 ```
 
-### Exemple : chat
-
-Les conversations et messages sont exposés sous forme de flux :
+Exemple chat (flux) :
 
 ```text
 StreamProvider.family<List<ChatEntity>, String>
-```
-
-et :
-
-```text
 StreamProvider.family<List<MessageEntity>, String>
 ```
 
-Cela permet à l'interface de recevoir automatiquement les mises à jour provenant de Firestore.
-
 ---
 
-# 🏛️ Architecture du projet
+## Architecture du projet
 
-Le projet suit une organisation par fonctionnalités inspirée de la **Clean Architecture**.
+Organisation par fonctionnalités, inspirée de la Clean Architecture.
 
 ```text
 lib/
-│
-├── core/
-│   ├── constants/
-│   ├── preferences/
-│   ├── router/
-│   ├── theme/
-│   └── utils/
-│
-└── features/
-    │
-    ├── auth/
-    │   ├── data/
-    │   ├── domain/
-    │   └── presentation/
-    │
-    ├── chat/
-    │   ├── data/
-    │   ├── domain/
-    │   └── presentation/
-    │
-    └── profile/
-        ├── data/
-        ├── domain/
-        └── presentation/
+|
++-- core/
+|     +-- locale/
+|     +-- preferences/
+|     +-- router/
+|     +-- theme/
+|     +-- utils/
+|     +-- widgets/
+|
++-- features/
+|     +-- auth/
+|     |     +-- data/
+|     |     +-- domain/
+|     |     +-- presentation/
+|     |
+|     +-- chat/
+|     |     +-- data/
+|     |     +-- domain/
+|     |     +-- presentation/
+|     |
+|     +-- onboarding/
+|     |     +-- presentation/
+|     |
+|     +-- profile/
+|           +-- data/
+|           +-- domain/
+|           +-- presentation/
+|
++-- firebase_options.dart
++-- main.dart
 ```
 
-### Data
+### Couches
 
-Responsable de l'accès aux sources de données.
+| Couche | Rôle |
+| ------ | ---- |
+| **Presentation** | Pages, widgets, providers, interactions |
+| **Domain** | Entités, contrats de repositories, use cases |
+| **Data** | Models, data sources, implémentations Firebase |
+| **Core** | Navigation, thème, locale, utilitaires partagés |
 
-Exemples :
-
-* Firebase Authentication ;
-* Cloud Firestore ;
-* Firebase Storage.
-
-### Domain
-
-Contient la logique métier indépendante des détails de présentation.
-
-On y retrouve notamment :
-
-* entities ;
-* repositories ;
-* use cases.
-
-### Presentation
-
-Contient :
-
-* pages ;
-* widgets ;
-* controllers ;
-* providers ;
-* états de l'interface.
-
-### Core
-
-Contient les éléments transversaux :
-
-* navigation ;
-* thème ;
-* préférences ;
-* constantes ;
-* utilitaires.
+La Presentation ne parle pas directement à Firebase : elle passe par Riverpod, puis par les use cases et repositories.
 
 ---
 
-# 🔄 Principe de séparation des responsabilités
+## Technologies
 
-L'application évite autant que possible de placer directement la logique Firebase dans les pages Flutter.
-
-Par exemple, pour l'authentification :
-
-```text
-LoginPage
-    │
-    ▼
-AuthController
-    │
-    ▼
-LoginUseCase
-    │
-    ▼
-AuthRepository
-    │
-    ▼
-AuthRemoteDataSource
-    │
-    ▼
-FirebaseAuth
-```
-
-Cette séparation permet de :
-
-* tester les différentes couches ;
-* remplacer une source de données plus facilement ;
-* limiter le couplage ;
-* maintenir une structure claire ;
-* faciliter le travail en équipe.
+| Technologie | Rôle |
+| ----------- | ---- |
+| Flutter / Dart | Application mobile |
+| Firebase Authentication | Comptes et session |
+| Cloud Firestore | Données et temps réel |
+| Firebase Storage | Images et audio |
+| Riverpod | État et dépendances |
+| go_router | Navigation |
+| SharedPreferences | Préférences locales |
+| image_picker / image / mime | Pipeline images |
+| record / audioplayers | Messages vocaux |
+| Flutter Test | Tests automatisés |
 
 ---
 
-# 🧪 Tests et qualité
+## Installation
 
-La qualité du projet est vérifiée avec les outils Flutter.
-
-### Analyse statique
-
-```bash
-flutter analyze
-```
-
-Résultat sur la branche de référence :
-
-```text
-No issues found!
-```
-
-### Tests automatisés
-
-```bash
-flutter test
-```
-
-Résultat :
-
-```text
-56 tests passed
-```
-
-Les tests couvrent notamment différentes parties de l'application, avec des tests liés à :
-
-* authentification ;
-* profil ;
-* chat ;
-* fonctionnalités d'image ;
-* providers ;
-* use cases ;
-* widgets ;
-* gestion des préférences.
-
----
-
-# 🧪 Approche QA
-
-Le projet comprend également une démarche de **Quality Assurance**.
-
-Le travail QA a notamment permis de :
-
-* identifier les problèmes d'intégration ;
-* corriger des tests après intégration de branches ;
-* documenter les constats ;
-* vérifier les fonctionnalités après fusion ;
-* contrôler la stabilité du projet.
-
-L'objectif n'est pas uniquement de vérifier que l'application compile, mais de vérifier que les fonctionnalités continuent de fonctionner après l'intégration des différentes contributions.
-
----
-
-# 🛠️ Technologies et dépendances principales
-
-| Technologie                 | Rôle                          |
-| --------------------------- | ----------------------------- |
-| **Flutter**                 | Framework mobile              |
-| **Dart**                    | Langage                       |
-| **Firebase Core**           | Initialisation Firebase       |
-| **Firebase Authentication** | Authentification              |
-| **Cloud Firestore**         | Données et temps réel         |
-| **Firebase Storage**        | Stockage de fichiers/images   |
-| **Riverpod**                | Gestion d'état et dépendances |
-| **go_router**               | Navigation                    |
-| **SharedPreferences**       | Préférences locales           |
-| **image_picker**            | Sélection d'images            |
-| **image**                   | Traitement d'images           |
-| **mime**                    | Détection des types MIME      |
-| **Flutter Test**            | Tests                         |
-| **Integration Test**        | Tests d'intégration           |
-| **Git / GitHub**            | Collaboration                 |
-
----
-
-# 📦 Installation
-
-## Prérequis
+### Prérequis
 
 * Flutter SDK compatible avec le projet
-* Dart SDK
-* Android Studio
-* Android SDK
-* Appareil Android ou émulateur
-* Compte/projet Firebase configuré
+* Android Studio (ou équivalent) et SDK Android
+* Appareil ou émulateur
+* Projet Firebase configuré (`lib/firebase_options.dart`)
 
-## Cloner le projet
+### Cloner et préparer
 
 ```bash
 git clone https://github.com/ParkerDieuveil/devcommunity_chat.git
-
 cd devcommunity_chat
-```
-
-## Installer les dépendances
-
-```bash
 flutter pub get
 ```
 
-## Vérifier le projet
+### Vérifier et lancer
 
 ```bash
 flutter analyze
-```
-
-## Exécuter les tests
-
-```bash
 flutter test
-```
-
-## Lancer l'application
-
-```bash
 flutter run
 ```
 
 ---
 
-# 🔥 Configuration Firebase
-
-DevCommunity Chat utilise Firebase comme backend pour plusieurs fonctionnalités.
+## Configuration Firebase
 
 Services utilisés :
 
@@ -564,161 +360,109 @@ Cloud Firestore
 Firebase Storage
 ```
 
-La configuration Flutter Firebase est générée via :
+Points d’attention pour la démo :
 
-```text
-firebase_options.dart
-```
+1. Auth email / mot de passe activé ;
+2. Firestore avec règles adaptées aux chats et profils ;
+3. Storage **activé** (création du bucket) et règles déployées (`storage.rules`).
 
-Les informations sensibles et credentials privés ne doivent pas être ajoutés manuellement au dépôt.
+Les credentials privés ne doivent pas être ajoutés manuellement au dépôt.
 
 ---
 
-# 🌳 Workflow Git et GitHub
+## Tests et qualité
 
-Le projet utilise une stratégie de développement basée sur les branches et les Pull Requests.
+```bash
+flutter analyze
+flutter test
+```
+
+La suite de tests couvre notamment l’authentification, le chat, le profil, l’onboarding, les préférences et les utilitaires (formats de dates, validateurs).
+
+Une démarche QA documentée est également présente dans `docs/qa/` (checklist, rapport de bugs, rapport de validation), en cohérence avec le travail intégré sur `develop`.
+
+---
+
+## Workflow Git
 
 ```text
 feature/*
-    │
-    ▼
+    |
+    v
  Pull Request
-    │
-    ▼
+    |
+    v
  develop
-    │
-    ▼
+    |
+    v
  Pull Request
-    │
-    ▼
- main
+    |
+    v
+  main
 ```
 
-Les branches principales sont protégées afin d'éviter les modifications directes non vérifiées.
+Conventions de commits :
 
-Chaque fonctionnalité importante peut être développée séparément puis intégrée après validation.
+| Préfixe | Usage |
+| ------- | ----- |
+| `feat:` | Nouvelle fonctionnalité |
+| `fix:` | Correction |
+| `refactor:` | Restructuration sans changement de comportement |
+| `test:` | Tests |
+| `docs:` | Documentation |
+| `chore:` | Maintenance / configuration |
+| `polish:` | Finitions UI / UX |
 
----
-
-# 📈 Historique des contributions
-
-Le projet a été développé progressivement à travers plusieurs contributions et Pull Requests.
-
-Parmi les travaux intégrés figurent notamment :
-
-### 🔐 Authentification
-
-Mise en place de Firebase Authentication, des repositories, use cases, providers et gestion des erreurs.
-
-### 🖼️ Messagerie avec images
-
-Une branche dédiée a permis d'introduire :
-
-* permissions ;
-* image picker ;
-* traitement des images ;
-* Storage ;
-* use case d'envoi ;
-* affichage dans le chat ;
-* tests associés.
-
-### 👤 Profil et avatar
-
-Le projet comprend également des travaux dédiés au profil et au téléchargement/gestion de l'avatar.
-
-### 🌙 Thème
-
-Une fonctionnalité dédiée permet de gérer le changement de thème.
-
-### 🧪 QA et tests
-
-Une branche spécifique a été consacrée à la couverture des tests et à la documentation QA.
-
-Cette organisation permet de retracer les contributions directement dans l'historique GitHub.
+Cette branche `feature/ui-polish` concentre le polish produit (navigation, onboarding, i18n, médias, groupes, thème) avant intégration dans `develop`.
 
 ---
 
-# 👨‍💻 Collaboration d'équipe
+## État actuel (feature/ui-polish)
 
-Le projet a été réalisé par le **Groupe 8 du FlutterFire Summer Camp 2026**.
+Base fonctionnelle pour la démonstration du camp :
 
-Le développement repose sur une collaboration GitHub permettant à chaque membre de contribuer à différentes parties du projet.
+* authentification et session ;
+* splash et onboarding ;
+* messagerie temps réel avec badges non-lus ;
+* recherche discussions / contacts + invite si non inscrit ;
+* un seul chat 1:1 par paire d’utilisateurs ;
+* pagination messages (10) + `ListView.builder` ;
+* accusés de lecture + mini-avatars « vu » (Messenger) ;
+* présence en ligne réelle (Firestore + lifecycle) ;
+* groupes avec nom ;
+* images et vocaux (sous réserve Storage) ;
+* profil et avatar ;
+* thème et localisation FR / EN ;
+* navigation Chats / Groupes / Profil / Plus + FAB « + » central ;
+* architecture Clean + Riverpod ;
+* animations UI légères ;
+* tests automatisés.
 
-Les contributions peuvent être vérifiées à travers :
-
-* commits ;
-* branches ;
-* Pull Requests ;
-* corrections ;
-* tests ;
-* documentation.
-
-Cette organisation permet également de suivre l'évolution du projet au cours du développement.
-
----
-
-# 📊 État actuel
-
-La branche de référence utilisée pour la validation actuelle présente une base stable comprenant notamment :
-
-* ✅ authentification Firebase ;
-* ✅ inscription / connexion / déconnexion ;
-* ✅ persistance de session ;
-* ✅ navigation protégée ;
-* ✅ chat ;
-* ✅ synchronisation Firestore ;
-* ✅ profils ;
-* ✅ avatar ;
-* ✅ gestion du thème ;
-* ✅ messagerie avec images dans le périmètre prévu ;
-* ✅ gestion d'état Riverpod ;
-* ✅ Clean Architecture ;
-* ✅ tests automatisés ;
-* ✅ QA ;
-* ✅ documentation.
-
-### Validation actuelle
-
-```text
-flutter analyze
-→ No issues found!
-
-flutter test
-→ 56 tests passed
-```
-
-La persistance de session a également été vérifiée manuellement sur un appareil Android.
+Référence d’intégration : les avancées de documentation et de stabilisation présentes sur `develop` (README enrichi, QA, persistance de session) sont prises en compte dans ce document afin d’aligner la présentation du produit.
 
 ---
 
-# 🔮 Perspectives
+## Perspectives
 
-Le projet peut continuer à évoluer avec notamment :
-
-* 🔔 notifications push ;
-* 🔎 recherche avancée d'utilisateurs et de conversations ;
-* 📎 amélioration du partage de fichiers ;
-* 🛡️ modération et signalement ;
-* 👥 gestion avancée des membres de groupes ;
-* 📊 fonctionnalités communautaires ;
-* 🔔 notifications de nouveaux messages ;
-* ☁️ amélioration de la gestion des médias ;
-* 🎨 amélioration continue de l'expérience utilisateur.
+* notifications push ;
+* partage d’invitation natif (au-delà du presse-papiers) ;
+* gestion enrichie des membres de groupe ;
+* amélioration continue des médias et de l’accessibilité.
 
 ---
 
-# 🏆 FlutterFire Summer Camp 2026
+## FlutterFire Summer Camp 2026
 
-**Projet :** DevCommunity Chat
-**Groupe :** 8
-**Catégorie :** Communication & Réseaux Sociaux
+| | |
+| --- | --- |
+| **Projet** | DevCommunity Chat |
+| **Groupe** | 8 |
+| **Catégorie** | Communication et réseaux sociaux |
 
-### Notre objectif
-
-> **Créer un espace simple et moderne permettant aux développeurs de communiquer, partager et construire leur communauté.**
+> Créer un espace simple et moderne permettant aux développeurs de communiquer, partager et construire leur communauté.
 
 ---
 
-## 📄 Licence
+## Licence
 
 Projet académique réalisé dans le cadre du **FlutterFire Summer Camp 2026**.

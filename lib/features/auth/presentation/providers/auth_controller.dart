@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../chat/domain/exceptions/chat_exceptions.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
+import '../../../../core/router/navigation_provider.dart';
 import '../../domain/entities/app_user.dart';
 import 'auth_provider.dart';
 
@@ -10,9 +11,7 @@ import 'auth_provider.dart';
 /// Ne remplace pas [currentUserProvider] pour savoir qui est connecté :
 /// après un hot restart, ce state repart à null alors que la session Firebase vit encore.
 final authControllerProvider =
-    NotifierProvider<AuthController, AsyncValue<AppUser?>>(
-  AuthController.new,
-);
+    NotifierProvider<AuthController, AsyncValue<AppUser?>>(AuthController.new);
 
 class AuthController extends Notifier<AsyncValue<AppUser?>> {
   @override
@@ -36,52 +35,35 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
     state = const AsyncLoading();
 
     try {
-      final user = await ref.read(registerUseCaseProvider).call(
-        email: email,
-        password: password,
-      );
+      final user = await ref
+          .read(registerUseCaseProvider)
+          .call(email: email, password: password);
 
       await _syncProfile(user);
 
       state = AsyncData(user);
     } on FirebaseAuthException catch (error, stackTrace) {
-      state = AsyncError(
-        _mapFirebaseAuthError(error),
-        stackTrace,
-      );
+      state = AsyncError(_mapFirebaseAuthError(error), stackTrace);
     } catch (error, stackTrace) {
-      state = AsyncError(
-        'Une erreur inattendue est survenue.',
-        stackTrace,
-      );
+      state = AsyncError('Une erreur inattendue est survenue.', stackTrace);
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     state = const AsyncLoading();
 
     try {
-      final user = await ref.read(loginUseCaseProvider).call(
-        email: email,
-        password: password,
-      );
+      final user = await ref
+          .read(loginUseCaseProvider)
+          .call(email: email, password: password);
 
       await _syncProfile(user);
 
       state = AsyncData(user);
     } on FirebaseAuthException catch (error, stackTrace) {
-      state = AsyncError(
-        _mapFirebaseAuthError(error),
-        stackTrace,
-      );
+      state = AsyncError(_mapFirebaseAuthError(error), stackTrace);
     } catch (error, stackTrace) {
-      state = AsyncError(
-        'Une erreur inattendue est survenue.',
-        stackTrace,
-      );
+      state = AsyncError('Une erreur inattendue est survenue.', stackTrace);
     }
   }
 
@@ -89,19 +71,24 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
     state = const AsyncLoading();
 
     try {
-      await ref.read(logoutUseCaseProvider).call();
+      final uid = ref.read(currentUserProvider)?.id;
+      if (uid != null) {
+        try {
+          await ref.read(userProfileRepositoryProvider).setUserOffline(uid);
+        } catch (_) {
+          // best-effort : ne bloque pas la déconnexion
+        }
+      }
 
+      await ref.read(logoutUseCaseProvider).call();
       state = const AsyncData(null);
+      // Reset onglet pour la prochaine session (après null user :
+      // HomePage n'affiche plus les onglets).
+      ref.read(mainTabProvider.notifier).selectTab(MainTab.chat);
     } on FirebaseAuthException catch (error, stackTrace) {
-      state = AsyncError(
-        _mapFirebaseAuthError(error),
-        stackTrace,
-      );
+      state = AsyncError(_mapFirebaseAuthError(error), stackTrace);
     } catch (error, stackTrace) {
-      state = AsyncError(
-        'Une erreur inattendue est survenue.',
-        stackTrace,
-      );
+      state = AsyncError('Une erreur inattendue est survenue.', stackTrace);
     }
   }
 
@@ -111,11 +98,11 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
         return 'L’adresse email est invalide.';
 
       case 'user-not-found':
-        return 'Aucun compte ne correspond à cette adresse email.';
+        return 'Aucun compte associé à cet email. Créez un compte pour continuer.';
 
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Email ou mot de passe incorrect.';
+        return 'Email ou mot de passe incorrect. Vérifiez vos identifiants ou créez un compte.';
 
       case 'email-already-in-use':
         return 'Cette adresse email est déjà utilisée.';
@@ -133,8 +120,7 @@ class AuthController extends Notifier<AsyncValue<AppUser?>> {
         return 'Ce compte a été désactivé.';
 
       default:
-        return error.message ??
-            'Une erreur d’authentification est survenue.';
+        return error.message ?? 'Une erreur d’authentification est survenue.';
     }
   }
 }

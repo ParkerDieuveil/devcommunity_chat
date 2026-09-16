@@ -5,7 +5,10 @@ class CreateChatUseCase {
 
   CreateChatUseCase(this.repository);
 
-  Future<String> call(List<String> participantIds) {
-    return repository.createChat(participantIds);
+  Future<String> call(
+    List<String> participantIds, {
+    String? name,
+  }) {
+    return repository.createChat(participantIds, name: name);
   }
 }

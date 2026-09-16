@@ -19,13 +19,16 @@ import '../../domain/services/chat_media_image_processor.dart';
 import '../../domain/services/chat_media_image_source.dart';
 import '../../domain/services/chat_media_validator.dart';
 import '../../domain/usecases/create_chat_use_case.dart';
+import '../../domain/usecases/fetch_older_messages_use_case.dart';
 import '../../domain/usecases/get_chat_use_case.dart';
 import '../../domain/usecases/mark_messages_as_read_use_case.dart';
+import '../../domain/usecases/send_chat_audio_use_case.dart';
 import '../../domain/usecases/send_chat_image_use_case.dart';
 import '../../domain/usecases/send_message_use_case.dart';
 import '../../domain/usecases/sync_user_profile_use_case.dart';
 import '../../domain/usecases/watch_messages_use_case.dart';
 import '../../domain/usecases/watch_user_chats_use_case.dart';
+import '../../domain/entities/messages_page.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
@@ -108,6 +111,11 @@ final watchMessagesUseCaseProvider = Provider<WatchMessagesUseCase>((ref) {
   return WatchMessagesUseCase(ref.watch(chatRepositoryProvider));
 });
 
+final fetchOlderMessagesUseCaseProvider =
+    Provider<FetchOlderMessagesUseCase>((ref) {
+  return FetchOlderMessagesUseCase(ref.watch(chatRepositoryProvider));
+});
+
 final sendMessageUseCaseProvider = Provider<SendMessageUseCase>((ref) {
   return SendMessageUseCase(ref.watch(chatRepositoryProvider));
 });
@@ -117,6 +125,13 @@ final sendChatImageUseCaseProvider = Provider<SendChatImageUseCase>((ref) {
     imageSource: ref.watch(chatMediaImageSourceProvider),
     validator: ref.watch(chatMediaValidatorProvider),
     processor: ref.watch(chatMediaImageProcessorProvider),
+    mediaStorage: ref.watch(chatMediaStorageProvider),
+    chatRepository: ref.watch(chatRepositoryProvider),
+  );
+});
+
+final sendChatAudioUseCaseProvider = Provider<SendChatAudioUseCase>((ref) {
+  return SendChatAudioUseCase(
     mediaStorage: ref.watch(chatMediaStorageProvider),
     chatRepository: ref.watch(chatRepositoryProvider),
   );
@@ -137,5 +152,7 @@ final userChatsProvider =
 
 final chatMessagesProvider =
     StreamProvider.family<List<MessageEntity>, String>((ref, chatId) {
-  return ref.watch(watchMessagesUseCaseProvider).call(chatId);
+  return ref
+      .watch(watchMessagesUseCaseProvider)
+      .call(chatId, limit: kMessagePageSize);
 });

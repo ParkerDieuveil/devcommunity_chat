@@ -34,10 +34,13 @@ Future<void> _pumpProfilePage(
         profileSalonCountProvider.overrideWith((ref) => const AsyncData(0)),
       ],
       child: const MaterialApp(
-        home: ProfilePage(avatarImage: AssetImage('assets/images/dev.png')),
+        home: ProfilePage(
+          avatarImage: AssetImage('assets/images/dev.png'),
+        ),
       ),
     ),
   );
+
   await tester.pumpAndSettle();
 
   await tester.ensureVisible(find.text('Modifier mon profil'));
@@ -65,54 +68,63 @@ void main() {
         await tester.tap(find.text('Enregistrer'));
         await tester.pumpAndSettle();
 
-        expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.textContaining('Échec de la mise à jour'), findsOneWidget);
+        expect(find.text('Enregistrer'), findsOneWidget);
+        expect(
+          find.textContaining('Échec de la mise à jour'),
+          findsOneWidget,
+        );
       },
     );
 
-    testWidgets('annuler ferme la boîte de dialogue sans appeler UpdateProfile', (
-      tester,
-    ) async {
-      final repository = FakeProfileRepository(
-        profile: ProfileEntity(
-          id: 'user-123',
-          displayname: 'Alexandre',
-          email: 'alex@example.com',
-          bio: 'Bio',
-          photoUrl: '',
-        ),
-      );
+    testWidgets(
+      'annuler ferme la boîte de dialogue sans appeler UpdateProfile',
+      (tester) async {
+        final repository = FakeProfileRepository(
+          profile: ProfileEntity(
+            id: 'user-123',
+            displayname: 'Alexandre',
+            email: 'alex@example.com',
+            bio: 'Bio',
+            photoUrl: '',
+          ),
+        );
 
-      await _pumpProfilePage(tester, repository: repository);
+        await _pumpProfilePage(tester, repository: repository);
 
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Annuler'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsNothing);
-      expect(repository.updateProfileCallCount, 0);
-    });
+        expect(find.text('Enregistrer'), findsNothing);
+        expect(repository.updateProfileCallCount, 0);
+      },
+    );
 
-    testWidgets('un nom vide est refusé sans appeler UpdateProfile', (
-      tester,
-    ) async {
-      final repository = FakeProfileRepository(
-        profile: ProfileEntity(
-          id: 'user-123',
-          displayname: 'Alexandre',
-          email: 'alex@example.com',
-          bio: 'Bio',
-          photoUrl: '',
-        ),
-      );
+    testWidgets(
+      'un nom vide est refusé sans appeler UpdateProfile',
+      (tester) async {
+        final repository = FakeProfileRepository(
+          profile: ProfileEntity(
+            id: 'user-123',
+            displayname: 'Alexandre',
+            email: 'alex@example.com',
+            bio: 'Bio',
+            photoUrl: '',
+          ),
+        );
 
-      await _pumpProfilePage(tester, repository: repository);
+        await _pumpProfilePage(tester, repository: repository);
 
-      await tester.enterText(find.byType(TextField).at(0), '');
-      await tester.tap(find.text('Enregistrer'));
-      await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byType(TextField).at(0),
+          '',
+        );
 
-      expect(find.text('Le nom est obligatoire.'), findsOneWidget);
-      expect(repository.updateProfileCallCount, 0);
-    });
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Le nom est obligatoire.'), findsOneWidget);
+        expect(repository.updateProfileCallCount, 0);
+      },
+    );
   });
 }
