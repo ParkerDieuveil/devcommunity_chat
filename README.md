@@ -107,6 +107,8 @@ Le module de chat s’appuie sur **Cloud Firestore** :
 * envoi et réception de messages texte en temps réel ;
 * **pagination / lazy loading** des messages (10 récents à l’ouverture, +10 au scroll vers le haut) ;
 * affichage via `ListView.builder` ;
+* bulles style Messenger / WhatsApp (couleurs clair / sombre) ;
+* accusés de lecture (`readBy`) : coches ✓ / ✓✓, appui long « Vu par », **mini-avatars** sous le dernier message lu (style Messenger) ;
 * marquage des messages lus (remet le compteur à zéro) ;
 * prévisualisation et horodatage localisés (FR / EN).
 
@@ -166,7 +168,9 @@ Les groupes créés portent un nom visible dans les listes et l’en-tête de co
 * affichage du profil ;
 * édition (pseudo, titre, bio) ;
 * avatar ;
-* synchronisation avec les données Firestore / Auth.
+* synchronisation avec les données Firestore / Auth ;
+* **présence en ligne réelle** (`isOnline` / `lastSeen` Firestore) : pastille sur les avatars, libellé dans le profil et l’en-tête de conversation ;
+* cycle de vie app + heartbeat (pas de mock) : online à la reprise, offline en arrière-plan / logout ; affichage seulement si `lastSeen` est récent.
 
 ### Thème et localisation
 
@@ -423,6 +427,8 @@ Base fonctionnelle pour la démonstration du camp :
 * recherche discussions / contacts + invite si non inscrit ;
 * un seul chat 1:1 par paire d’utilisateurs ;
 * pagination messages (10) + `ListView.builder` ;
+* accusés de lecture + mini-avatars « vu » (Messenger) ;
+* présence en ligne réelle (Firestore + lifecycle) ;
 * groupes avec nom ;
 * images et vocaux (sous réserve Storage) ;
 * profil et avatar ;
