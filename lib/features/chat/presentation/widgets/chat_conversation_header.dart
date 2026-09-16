@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/online_avatar.dart';
 import 'round_icon_button.dart';
 
-/// En-tête conversation : retour, titre, avatar, menu infos.
+/// En-tête conversation : retour, titre, avatar + présence, menu infos.
 class ChatConversationHeader extends StatelessWidget {
   const ChatConversationHeader({
     super.key,
@@ -12,6 +14,9 @@ class ChatConversationHeader extends StatelessWidget {
     required this.photoUrl,
     required this.closeLabel,
     required this.onBack,
+    this.isOnline = false,
+    this.showPresence = false,
+    this.subtitleIsOnline = false,
   });
 
   final String pageTitle;
@@ -20,6 +25,9 @@ class ChatConversationHeader extends StatelessWidget {
   final String photoUrl;
   final String closeLabel;
   final VoidCallback onBack;
+  final bool isOnline;
+  final bool showPresence;
+  final bool subtitleIsOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +41,7 @@ class ChatConversationHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
             child: Row(
               children: [
-                RoundIconButton(
-                  icon: Icons.arrow_back,
-                  onTap: onBack,
-                ),
+                RoundIconButton(icon: Icons.arrow_back, onTap: onBack),
                 Expanded(
                   child: Text(
                     pageTitle,
@@ -60,11 +65,27 @@ class ChatConversationHeader extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ListTile(
-                                leading: const Icon(Icons.info_outline),
+                                leading: OnlineAvatar(
+                                  radius: 20,
+                                  photoUrl: photoUrl,
+                                  initials: peerTitle,
+                                  isOnline: isOnline,
+                                  showPresence: showPresence,
+                                ),
                                 title: Text(peerTitle),
                                 subtitle: peerSubtitle.isEmpty
                                     ? null
-                                    : Text(peerSubtitle),
+                                    : Text(
+                                        peerSubtitle,
+                                        style: TextStyle(
+                                          color: subtitleIsOnline
+                                              ? AppColors.online
+                                              : null,
+                                          fontWeight: subtitleIsOnline
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                        ),
+                                      ),
                               ),
                               ListTile(
                                 leading: const Icon(Icons.close),
@@ -85,21 +106,12 @@ class ChatConversationHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Row(
               children: [
-                CircleAvatar(
+                OnlineAvatar(
                   radius: 24,
-                  backgroundImage: photoUrl.trim().isNotEmpty
-                      ? NetworkImage(photoUrl)
-                      : null,
-                  child: photoUrl.trim().isEmpty
-                      ? Text(
-                          peerTitle.isNotEmpty
-                              ? peerTitle[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
+                  photoUrl: photoUrl,
+                  initials: peerTitle,
+                  isOnline: isOnline,
+                  showPresence: showPresence,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -124,7 +136,12 @@ class ChatConversationHeader extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
-                            color: colors.onSurfaceVariant,
+                            fontWeight: subtitleIsOnline
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: subtitleIsOnline
+                                ? AppColors.online
+                                : colors.onSurfaceVariant,
                           ),
                         ),
                       ],

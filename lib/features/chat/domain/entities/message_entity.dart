@@ -11,6 +11,9 @@ class MessageEntity {
   final DateTime timestamp;
   final DateTime? readAt;
 
+  /// Lecteurs du message (`userId` → moment de lecture).
+  final Map<String, DateTime> readBy;
+
   const MessageEntity({
     required this.messageId,
     required this.chatId,
@@ -21,7 +24,13 @@ class MessageEntity {
     required this.type,
     required this.timestamp,
     this.readAt,
+    this.readBy = const {},
   });
 
-  bool get isRead => readAt != null;
+  /// IDs des personnes (hors expéditeur) qui ont vu le message.
+  List<String> seenByOtherIds() =>
+      readBy.keys.where((id) => id != senderId).toList(growable: false);
+
+  /// Au moins une autre personne a lu (ou ancien champ `readAt`).
+  bool get isRead => seenByOtherIds().isNotEmpty || readAt != null;
 }

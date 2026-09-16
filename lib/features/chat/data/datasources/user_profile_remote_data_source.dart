@@ -5,6 +5,8 @@ import '../models/user_profile_model.dart';
 abstract class UserProfileRemoteDataSource {
   Future<void> createOrUpdateUserProfile(UserProfileModel profile);
 
+  Future<void> setUserOnline(String uid);
+
   Future<void> setUserOffline(String uid);
 }
 
@@ -28,6 +30,17 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     }
 
     await docRef.set(data, SetOptions(merge: true));
+  }
+
+  @override
+  Future<void> setUserOnline(String uid) async {
+    await _users.doc(uid).set(
+      {
+        'isOnline': true,
+        'lastSeen': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
   }
 
   @override

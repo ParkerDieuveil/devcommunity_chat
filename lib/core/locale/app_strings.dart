@@ -199,6 +199,14 @@ class AppStrings {
   String participantsCount(int count) => isFrench
       ? '$count participants'
       : '$count participants';
+  String get seenByTitle => isFrench ? 'Vu par' : 'Seen by';
+  String get notSeenYet => isFrench ? 'Pas encore vu' : 'Not seen yet';
+  String get messageSent => isFrench ? 'Envoyé' : 'Sent';
+  String get messageDelivered => isFrench ? 'Distribué' : 'Delivered';
+  String get messageSeen => isFrench ? 'Vu' : 'Seen';
+  String get holdForSeenBy => isFrench
+      ? 'Appui long pour voir qui a lu'
+      : 'Long-press to see who read';
 
   // —— Conversation ——
   String get messagesTitle => isFrench ? 'Message' : 'Message';

@@ -7,11 +7,13 @@ class ProfileInfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onCopy,
+    this.valueColor,
   });
 
   final String label;
   final String value;
   final VoidCallback onCopy;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class ProfileInfoRow extends StatelessWidget {
             child: Text(
               value,
               style: TextStyle(
-                color: colors.onSurface,
+                color: valueColor ?? colors.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

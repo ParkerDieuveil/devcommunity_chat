@@ -6,6 +6,7 @@ import '../../../../core/locale/app_strings.dart';
 import '../../../../core/router/app_route_path.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/date_format.dart';
+import '../../../../core/widgets/online_avatar.dart';
 import '../../../profile/domain/entities/profile.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../utils/chat_display.dart';
@@ -76,6 +77,7 @@ class ChatListTile extends StatelessWidget {
       weekdayLabels: weekdayLabels,
     );
     final photoUrl = others.length == 1 ? others.first.photoUrl : '';
+    final peerOnline = others.length == 1 && others.first.isEffectivelyOnline;
     final preview = chat.lastMessage ?? noMessagePreview;
     final colors = Theme.of(context).colorScheme;
     final unread = chat.unreadFor(currentUserId);
@@ -96,21 +98,11 @@ class ChatListTile extends StatelessWidget {
                 child: const Icon(Icons.groups, color: AppColors.brand),
               )
             else
-              CircleAvatar(
+              OnlineAvatar(
                 radius: 26,
-                backgroundColor: AppColors.brandSurfaceAlt,
-                backgroundImage:
-                    photoUrl.trim().isNotEmpty ? NetworkImage(photoUrl) : null,
-                child: photoUrl.trim().isEmpty
-                    ? Text(
-                        nameInitial(displayName),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.headerBlue,
-                          fontSize: 18,
-                        ),
-                      )
-                    : null,
+                photoUrl: photoUrl,
+                initials: nameInitial(displayName),
+                isOnline: peerOnline,
               ),
             const SizedBox(width: 12),
             Expanded(

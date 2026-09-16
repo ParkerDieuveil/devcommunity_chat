@@ -69,10 +69,7 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          AppSecondaryHeader(
-            title: s.addContact,
-            onBack: () => context.pop(),
-          ),
+          AppSecondaryHeader(title: s.addContact, onBack: () => context.pop()),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: TextField(
@@ -111,7 +108,9 @@ class _NewChatPageState extends ConsumerState<NewChatPage> {
                 strings: s,
                 users: profiles
                     .where((p) => p.id != currentUser.id)
-                    .where((p) => _query.isNotEmpty && matchesProfile(p, _query))
+                    .where(
+                      (p) => _query.isNotEmpty && matchesProfile(p, _query),
+                    )
                     .toList(),
                 creatingChatFor: _creatingChatFor,
                 onStartChat: (id) => _startChat(currentUser.id, id),
@@ -152,9 +151,7 @@ class _NewChatResults extends StatelessWidget {
       if (looksLikeEmail(query)) {
         return InviteNotRegisteredCard(query: query, strings: strings);
       }
-      return SearchEmptyIllustration(
-        message: strings.noUsersFound(query),
-      );
+      return SearchEmptyIllustration(message: strings.noUsersFound(query));
     }
 
     return ListView.separated(
@@ -167,6 +164,7 @@ class _NewChatResults extends StatelessWidget {
           displayName: profile.displayname,
           email: profile.email,
           photoUrl: profile.photoUrl,
+          isOnline: profile.isEffectivelyOnline,
           loading: creatingChatFor == profile.id,
           startChatTooltip: strings.startChat,
           onTap: () => onStartChat(profile.id),

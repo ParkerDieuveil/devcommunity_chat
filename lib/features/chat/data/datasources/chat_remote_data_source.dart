@@ -164,6 +164,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'type': type,
       'timestamp': FieldValue.serverTimestamp(),
       'readAt': null,
+      'readBy': <String, dynamic>{},
     });
 
     final chatUpdate = <String, dynamic>{
@@ -246,15 +247,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final senderId = data['senderId'] as String?;
-      final readAt = data['readAt'];
+      if (senderId == null || senderId == userId) continue;
 
-      if (senderId != userId && readAt == null) {
-        batch.update(
-          doc.reference,
-          {'readAt': FieldValue.serverTimestamp()},
-        );
-        updates++;
-      }
+      final readBy = data['readBy'];
+      final alreadyRead = readBy is Map && readBy.containsKey(userId);
+      if (alreadyRead) continue;
+
+      batch.update(doc.reference, {
+        'readBy.$userId': FieldValue.serverTimestamp(),
+        'readAt': FieldValue.serverTimestamp(),
+      });
+      updates++;
     }
 
     // Remet le badge à 0 pour cet utilisateur.

@@ -13,6 +13,7 @@ class MessageModel extends MessageEntity {
     required super.type,
     required super.timestamp,
     super.readAt,
+    super.readBy,
   });
 
   factory MessageModel.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +38,7 @@ class MessageModel extends MessageEntity {
       type: type,
       timestamp: _readDateTime(data['timestamp']) ?? DateTime.now(),
       readAt: _readDateTime(data['readAt']),
+      readBy: _readReadBy(data['readBy']),
     );
   }
 
@@ -49,7 +51,21 @@ class MessageModel extends MessageEntity {
       'type': type.name,
       'timestamp': Timestamp.fromDate(timestamp),
       'readAt': readAt == null ? null : Timestamp.fromDate(readAt!),
+      'readBy': {
+        for (final entry in readBy.entries)
+          entry.key: Timestamp.fromDate(entry.value),
+      },
     };
+  }
+
+  static Map<String, DateTime> _readReadBy(dynamic value) {
+    if (value is! Map) return const {};
+    final result = <String, DateTime>{};
+    value.forEach((key, raw) {
+      final at = _readDateTime(raw);
+      if (at != null) result[key.toString()] = at;
+    });
+    return result;
   }
 
   static DateTime? _readDateTime(dynamic value) {

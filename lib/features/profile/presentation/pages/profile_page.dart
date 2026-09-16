@@ -36,9 +36,7 @@ class ProfilePage extends ConsumerWidget {
           Scaffold(body: Center(child: Text('Erreur : $error'))),
       data: (user) {
         if (user == null) {
-          return Scaffold(
-            body: Center(child: Text(s.noUserLoggedIn)),
-          );
+          return Scaffold(body: Center(child: Text(s.noUserLoggedIn)));
         }
         return _ProfileBody(user: user, avatarImage: avatarImage);
       },
@@ -79,8 +77,9 @@ class _ProfileBody extends ConsumerWidget {
 
     final salonCount = salonCountAsync.asData?.value;
     final memberSince = _formatMemberSince(profile?.createdAt, s);
-    final statusLabel =
-        profile?.isOnline == true ? s.statusOnline : s.statusOffline;
+    final statusLabel = profile?.isEffectivelyOnline == true
+        ? s.statusOnline
+        : s.statusOffline;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -94,9 +93,11 @@ class _ProfileBody extends ConsumerWidget {
                 children: [
                   ProfileAvatar(
                     imageProvider: imageProvider,
-                    isUploading:
-                        ref.watch(profileAvatarControllerProvider).isLoading,
+                    isUploading: ref
+                        .watch(profileAvatarControllerProvider)
+                        .isLoading,
                     onTap: () => _onChangeAvatar(context, ref),
+                    isOnline: profile?.isEffectivelyOnline == true,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -138,6 +139,9 @@ class _ProfileBody extends ConsumerWidget {
                     ProfileInfoRow(
                       label: s.labelStatus,
                       value: statusLabel,
+                      valueColor: profile?.isEffectivelyOnline == true
+                          ? AppColors.online
+                          : null,
                       onCopy: () => _copy(context, ref, statusLabel),
                     ),
                     if (memberSince != '—')
@@ -199,8 +203,9 @@ class _ProfileBody extends ConsumerWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.dangerSurface,
                         foregroundColor: AppColors.danger,
-                        disabledForegroundColor:
-                            AppColors.danger.withValues(alpha: 0.5),
+                        disabledForegroundColor: AppColors.danger.withValues(
+                          alpha: 0.5,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -289,16 +294,16 @@ class _ProfileBody extends ConsumerWidget {
 
     final state = ref.read(profileAvatarControllerProvider);
     if (state.hasError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${state.error}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${state.error}')));
       return;
     }
 
     if (changed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.avatarUpdated)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(s.avatarUpdated)));
     }
   }
 

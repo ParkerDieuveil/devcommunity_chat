@@ -58,6 +58,7 @@ class ChatsSearchResults extends StatelessWidget {
               displayName: profile.displayname,
               email: profile.email,
               photoUrl: profile.photoUrl,
+              isOnline: profile.isEffectivelyOnline,
               loading: creatingChatFor == profile.id,
               startChatTooltip: strings.startChat,
               onTap: () => onOpenContact(profile.id),

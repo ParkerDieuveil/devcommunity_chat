@@ -20,4 +20,6 @@ abstract final class AppColors {
   static const borderSubtle = Color(0xFFE0E0E0);
   static const borderDark = Color(0xFF263041);
   static const borderPanelLight = Color(0xFFEEF1F5);
+  static const online = Color(0xFF22C55E);
+  static const offline = Color(0xFF9E9E9E);
 }

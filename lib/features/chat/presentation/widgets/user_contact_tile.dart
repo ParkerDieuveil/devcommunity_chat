@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/widgets/online_avatar.dart';
 import '../utils/chat_display.dart';
 
 /// Tuile contact (recherche new chat).
@@ -13,6 +14,7 @@ class UserContactTile extends StatelessWidget {
     required this.loading,
     required this.startChatTooltip,
     required this.onTap,
+    this.isOnline = false,
   });
 
   final String displayName;
@@ -21,6 +23,7 @@ class UserContactTile extends StatelessWidget {
   final bool loading;
   final String startChatTooltip;
   final VoidCallback onTap;
+  final bool isOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +31,11 @@ class UserContactTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
+      leading: OnlineAvatar(
         radius: 24,
-        backgroundImage:
-            photoUrl.trim().isNotEmpty ? NetworkImage(photoUrl) : null,
-        child: photoUrl.trim().isEmpty
-            ? Text(
-                nameInitial(name),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
-            : null,
+        photoUrl: photoUrl,
+        initials: nameInitial(name),
+        isOnline: isOnline,
       ),
       title: Text(
         name,
@@ -45,11 +43,7 @@ class UserContactTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: Text(
-        email,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: Text(email, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: loading
           ? const SizedBox(
               width: 24,

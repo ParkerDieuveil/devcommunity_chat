@@ -13,6 +13,7 @@ import '../../domain/entities/chat_media_image.dart';
 import '../providers/chat_messages_controller.dart';
 import '../providers/chat_provider.dart';
 import '../utils/chat_display.dart';
+import '../utils/message_seen_faces.dart';
 import '../widgets/chat_attachment_panel.dart';
 import '../widgets/chat_conversation_header.dart';
 import '../widgets/chat_message_bubble.dart';
@@ -47,7 +48,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     if (_scrollController.position.pixels <= 80) {
-      ref.read(chatMessagesControllerProvider(widget.chatId).notifier).loadMore();
+      ref
+          .read(chatMessagesControllerProvider(widget.chatId).notifier)
+          .loadMore();
     }
   }
 
@@ -174,7 +177,11 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
 
   String _subtitleFor(List<ProfileEntity> others, AppStrings s) {
     if (others.isEmpty) return '';
-    if (others.length == 1) return others.first.email;
+    if (others.length == 1) {
+      return others.first.isEffectivelyOnline
+          ? s.statusOnline
+          : s.statusOffline;
+    }
     return s.participantsCount(others.length + 1);
   }
 
@@ -182,8 +189,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final s = ref.watch(appStringsProvider);
-    final messagesState =
-        ref.watch(chatMessagesControllerProvider(widget.chatId));
+    final messagesState = ref.watch(
+      chatMessagesControllerProvider(widget.chatId),
+    );
     final profilesAsync = ref.watch(profilesProvider);
     final chatAsync = ref.watch(chatByIdProvider(widget.chatId));
 
@@ -217,6 +225,8 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
     );
     final subtitle = _subtitleFor(others, s);
     final photoUrl = others.length == 1 ? others.first.photoUrl : '';
+    final isDirect = others.length == 1;
+    final peerOnline = isDirect && others.first.isEffectivelyOnline;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -235,6 +245,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
             photoUrl: photoUrl,
             closeLabel: s.close,
             onBack: () => context.pop(),
+            isOnline: peerOnline,
+            showPresence: isDirect,
+            subtitleIsOnline: peerOnline,
           ),
           Expanded(
             child: ColoredBox(
@@ -268,6 +281,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                   if (_lastMessageCount == null) {
                     _ensureLatestVisible(messages.length);
                   }
+                  final lastReadBy = lastReadMessageIdByUser(messages);
+                  final profiles = profilesAsync.asData?.value ?? const [];
+
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -286,14 +302,28 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                           ),
                         );
                       }
-                      final messageIndex =
-                          messagesState.isLoadingMore ? index - 1 : index;
+                      final messageIndex = messagesState.isLoadingMore
+                          ? index - 1
+                          : index;
                       final message = messages[messageIndex];
+                      final isGroup = others.length > 1;
+                      final isMine = message.senderId == user?.id;
+                      final faces = isMine
+                          ? seenFacesForMessage(
+                              message: message,
+                              lastReadByUser: lastReadBy,
+                              profiles: profiles,
+                            )
+                          : const <ProfileEntity>[];
                       return ChatMessageBubble(
                         message: message,
-                        mine: message.senderId == user?.id,
+                        mine: isMine,
+                        isGroup: isGroup,
+                        profiles: profiles,
+                        strings: s,
                         imageUnavailable: s.imageUnavailable,
                         voiceMessageLabel: s.voiceMessage,
+                        seenFaces: faces,
                       );
                     },
                   );
@@ -311,7 +341,7 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                   opacity: animation,
                   child: SizeTransition(
                     sizeFactor: animation,
-                    axisAlignment: -1,
+                    alignment: Alignment.topCenter,
                     child: child,
                   ),
                 );
@@ -323,11 +353,9 @@ class _ChatMessagesPageState extends ConsumerState<ChatMessagesPage> {
                       cameraLabel: s.attachCamera,
                       recordLabel: s.attachRecord,
                       galleryLabel: s.attachGallery,
-                      onCamera: () =>
-                          _sendImage(ChatMediaPickSource.camera),
+                      onCamera: () => _sendImage(ChatMediaPickSource.camera),
                       onRecord: _openVoiceRecorder,
-                      onGallery: () =>
-                          _sendImage(ChatMediaPickSource.gallery),
+                      onGallery: () => _sendImage(ChatMediaPickSource.gallery),
                     )
                   : const SizedBox(
                       key: ValueKey('attachments-closed'),
