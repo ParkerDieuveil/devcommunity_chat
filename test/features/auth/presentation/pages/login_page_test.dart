@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:devcommunitychat/core/preferences/shared_preferences_provider.dart';
+import 'package:devcommunitychat/features/auth/presentation/pages/login_page.dart';
+
+import '../../../../helpers/test_prefs.dart';
+
+void main() {
+  group('LoginPage', () {
+    Future<void> pumpLoginPage(WidgetTester tester) async {
+      final prefs = await mockSharedPreferences();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const MaterialApp(home: LoginPage()),
+        ),
+      );
+    }
+
+    testWidgets('affiche les éléments principaux', (tester) async {
+      await pumpLoginPage(tester);
+
+      expect(find.byType(Image), findsOneWidget);
+      expect(
+        find.text('Connectez-vous à votre communauté.'),
+        findsOneWidget,
+      );
+      expect(find.text('Email'), findsOneWidget);
+      expect(find.text('Mot de passe'), findsOneWidget);
+      expect(find.text('Se connecter'), findsOneWidget);
+      expect(find.text('Créer un compte'), findsOneWidget);
+    });
+
+    testWidgets('valide un email vide', (tester) async {
+      await pumpLoginPage(tester);
+
+      await tester.tap(find.text('Se connecter'));
+      await tester.pump();
+
+      expect(find.text('Veuillez entrer votre email.'), findsOneWidget);
+    });
+
+    testWidgets('valide un email incorrect', (tester) async {
+      await pumpLoginPage(tester);
+
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'email-invalide',
+      );
+
+      await tester.tap(find.text('Se connecter'));
+      await tester.pump();
+
+      expect(
+        find.text('Veuillez entrer une adresse email valide.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('valide un mot de passe vide', (tester) async {
+      await pumpLoginPage(tester);
+
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'marie.dupont@gmail.com',
+      );
+
+      await tester.tap(find.text('Se connecter'));
+      await tester.pump();
+
+      expect(find.text('Veuillez entrer votre mot de passe.'), findsOneWidget);
+    });
+  });
+}

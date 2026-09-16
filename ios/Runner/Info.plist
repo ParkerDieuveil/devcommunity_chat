@@ -66,5 +66,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DevCommunity a besoin de ta galerie pour la photo de profil et les images du chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DevCommunity a besoin de la caméra pour la photo de profil et les photos du chat.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>DevCommunity peut enregistrer des images liées au profil et au chat.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>DevCommunity a besoin du micro pour envoyer des messages vocaux.</string>
 </dict>
 </plist>
