@@ -1,6 +1,6 @@
 # Rapport de validation finale — DevCommunity Chat
 
-Vérification effectuée sur la branche `feature/tests-qa` (fusionnée avec `develop` à jour) le 14/09/2026.
+Vérification effectuée sur la branche `feature/tests-qa` (fusionnée avec `develop` à jour, incluant images, avatar, thème) le 15/09/2026.
 
 ## flutter analyze
 
@@ -14,26 +14,27 @@ No issues found!
 ## flutter test
 
 ```
-🎉 44 tests passed.
+🎉 56 tests passed.
 ```
 
-✅ 44/44 tests passent, répartis sur :
+✅ 56/56 tests passent, répartis sur :
 - Démarrage de l'app et navigation (routeur + onglets, icônes)
 - Authentification : `LoginPage`/`RegisterPage` (rendu, validations), `AuthController.logout` (succès/erreur), boutons de déconnexion
-- Profil : affichage, états loading/erreur/vide, thème, boîte de dialogue d'édition
-- Chat : `ChatsPage` (liste, vide, temps réel), `ChatMessagesPage` (liste, vide, temps réel, envoi, erreur d'envoi), `SendMessageUseCase`/`WatchMessagesUseCase` (unitaires), `MessageBubble`, `MessageComposer`
+- Profil : affichage de données réelles (bio, titre, stats, statut en ligne), états loading/erreur/vide, thème, modification (succès/échec/annulation/validation), upload d'avatar (pipeline complet)
+- Thème clair/sombre : persistance et restauration
+- Chat : `ChatsPage`/`ChatMessagesPage` (liste, vide, temps réel, envoi texte, envoi image, erreur d'envoi), `SendMessageUseCase`/`SendChatImageUseCase`/`WatchMessagesUseCase` (unitaires), `MessageBubble`, `MessageComposer`
 
-Les tests de déconnexion et de chat utilisent des fakes en mémoire (`FakeAuthRepository`, `FakeChatRepository`) implémentant directement les interfaces du domaine, sans dépendance Firebase/Firestore réelle ni librairie de mock supplémentaire.
+Les tests de déconnexion, profil et chat utilisent des fakes en mémoire (`FakeAuthRepository`, `FakeProfileRepository`, `FakeChatRepository`) implémentant directement les interfaces du domaine, sans dépendance Firebase/Firestore/Storage réelle ni librairie de mock supplémentaire.
 
 ## Portée et limites
 
-Ne sont pas couverts par des tests automatisés : l'enregistrement effectif des modifications de profil (`UpdateProfile` → Firestore), et les appels réels aux services Firebase Auth/Firestore (seule la logique métier est testée via des fakes). Le tab "Chat" de la navigation principale utilise toujours un chat local en mémoire non branché sur Firestore — voir [`BUG_REPORT.md`](./BUG_REPORT.md).
+Ne sont pas couverts par `flutter test` : les vrais appels réseau vers Firebase Auth/Firestore/Storage (seule la logique métier est testée via des fakes). Un test d'intégration existant (`integration_test/auth_firebase_test.dart`) couvre les vrais appels `FirebaseAuth` mais nécessite un appareil/émulateur et n'a pas été exécuté depuis cet environnement — voir [`BUG_REPORT.md`](./BUG_REPORT.md).
 
 ## Critères d'acceptation (Issue #8)
 
 | Critère | Statut |
 |---|---|
-| Les fonctionnalités MVP principales sont testées | ✅ Démarrage, auth, déconnexion, navigation, profil, chat (envoi + temps réel) tous couverts |
+| Les fonctionnalités MVP principales sont testées | ✅ Démarrage, auth, déconnexion, navigation, profil (+ modification + avatar), thème, chat (texte + image + temps réel) tous couverts |
 | Aucun bug bloquant connu | ✅ |
 | `flutter analyze` passe | ✅ |
 | `flutter test` passe | ✅ |

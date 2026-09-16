@@ -13,6 +13,9 @@ class FakeProfileRepository implements ProfileRepository {
   String? lastTitle;
   bool? lastPushEnabled;
 
+  /// Si défini, `updateProfile` lève cette erreur au lieu de réussir.
+  Exception? updateProfileError;
+
   FakeProfileRepository({this.profile});
 
   @override
@@ -40,6 +43,10 @@ class FakeProfileRepository implements ProfileRepository {
     lastEmail = email;
     lastBio = bio;
     lastTitle = title;
+
+    if (updateProfileError != null) {
+      throw updateProfileError!;
+    }
 
     profile = ProfileEntity(
       id: userId,
